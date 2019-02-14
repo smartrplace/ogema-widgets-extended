@@ -1,0 +1,33 @@
+${permissions;packages;services;capabilities}
+
+# OGEMA standard permissions
+(org.osgi.framework.ServicePermission "org.ogema.core.application.Application" "register")
+(org.osgi.framework.ServicePermission "de.iwes.widgets.api.OgemaGuiService" "get")
+(org.ogema.accesscontrol.WebAccessPermission "name=org.ogema.widgets.ogema-js-bundle")
+#(org.osgi.framework.PackagePermission "org.ogema.tools.*" "import")
+#(org.osgi.framework.PackagePermission "org.ogema.util.*" "import")
+#(org.osgi.framework.PackagePermission "org.ogema.core.*" "import")
+#(org.osgi.framework.PackagePermission "org.ogema.model.*" "import")
+#(org.osgi.framework.PackagePermission "org.ogema.pattern.*" "import")
+#(org.osgi.framework.PackagePermission "de.iwes.widgets.*" "import")
+#(org.osgi.framework.PackagePermission "de.iwes.tools.*" "import")
+#(org.osgi.framework.PackagePermission "de.iwes.util.*" "import")
+#(org.osgi.framework.PackagePermission "org.slf4j" "import")
+#(org.osgi.framework.PackagePermission "java.io.FilePermission" "import")
+
+#Automated Generation Below:
+# import permissions
+#(org.osgi.framework.PackagePermission "org.apache.felix.scr.annotations" "import")
+#(org.osgi.framework.PackagePermission "org.osgi.framework" "import")
+#(org.osgi.framework.PackagePermission "com.google.common.cache" "import")
+
+# export/custom type permissions
+(org.osgi.framework.ServicePermission "de.iwes.widgets.resource.timeseries.OnlineTimeSeriesCache" "get")
+(org.osgi.framework.ServicePermission "de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfigurationProvider" "get")
+(org.osgi.framework.ServicePermission "org.ogema.recordeddata.DataRecorder" "get")
+(org.osgi.framework.PackagePermission "org.ogema.recordeddata" "import")
+(java.util.PropertyPermission "org.ogema.apps.createtestresources" "read")
+(java.util.PropertyPermission "org.ogema.reswidget.eval.scheduleviewer.expert.selectOffered.donot" "read")
+
+# resource permissions
+(org.ogema.accesscontrol.ResourcePermission "type=*" "read")
