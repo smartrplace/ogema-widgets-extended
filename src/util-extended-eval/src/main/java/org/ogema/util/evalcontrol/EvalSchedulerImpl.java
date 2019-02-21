@@ -599,7 +599,7 @@ public class EvalSchedulerImpl implements EvalScheduler {
 				if(providersDone.contains(provider)) continue;
 				providersDone.add(provider);
 				GaRoSingleEvalProvider eval = getProvider(provider);
-				activateAutoScheduling(eval, mkc);
+				startAutoScheduling(eval, mkc);
 			}
 		}
 		//for(ProviderData p: knownProviders.values()) {
@@ -715,9 +715,9 @@ public class EvalSchedulerImpl implements EvalScheduler {
 		String providerId = eval.id();
 		if(nextAutoSchedulingTime.get(providerId) != null) return;
 		MultiKPIEvalConfiguration config = getConfig(providerId, subConfigId);
-		activateAutoScheduling(eval, config);
+		startAutoScheduling(eval, config);
 	}
-	private void activateAutoScheduling(GaRoSingleEvalProvider eval, MultiKPIEvalConfiguration config) {
+	private void startAutoScheduling(GaRoSingleEvalProvider eval, MultiKPIEvalConfiguration config) {
 		String providerId = eval.id();
 		if(config == null || (!config.isActive())) return;
 		if((!config.performAutoQueuing().isActive()) ||

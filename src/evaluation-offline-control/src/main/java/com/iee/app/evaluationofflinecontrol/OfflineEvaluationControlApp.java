@@ -205,6 +205,7 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
 		//mc = page3cc.getMenuConfiguration();
 		//mc.setCustomNavigation(menu);
 		controller.registerExistingMultiPages();
+		controller.registerBackupListeners();
 		
 		initDone = true;
 		for(GaRoSingleEvalProvider p: earlyProviders) initGaroProvider(p);

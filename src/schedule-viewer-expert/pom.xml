@@ -59,10 +59,10 @@
 			<groupId>org.ogema.core</groupId>
 			<artifactId>models</artifactId>
 		</dependency>
-		<dependency>
+		<!-- <dependency>
 			<groupId>org.ogema.ref-impl</groupId>
 			<artifactId>internal-api</artifactId>
-		</dependency>
+		</dependency> -->
 		<dependency>
 			<groupId>org.ogema.widgets</groupId>
 			<artifactId>widget-extended</artifactId>

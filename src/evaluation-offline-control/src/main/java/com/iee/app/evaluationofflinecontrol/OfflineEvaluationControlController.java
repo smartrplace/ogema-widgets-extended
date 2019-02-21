@@ -15,8 +15,11 @@
  */
 package com.iee.app.evaluationofflinecontrol;
 
+import java.io.File;
+import java.nio.file.Paths;
 import java.time.temporal.ChronoUnit;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Comparator;
 import java.util.HashMap;
@@ -25,15 +28,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.Set;
 
+import org.joda.time.DateTimeZone;
 import org.ogema.core.application.ApplicationManager;
 import org.ogema.core.application.Timer;
 import org.ogema.core.application.TimerListener;
 import org.ogema.core.logging.OgemaLogger;
+import org.ogema.core.model.Resource;
+import org.ogema.core.model.ResourceList;
 import org.ogema.core.model.array.StringArrayResource;
 import org.ogema.core.model.simple.BooleanResource;
 import org.ogema.core.model.simple.StringResource;
 import org.ogema.core.resourcemanager.ResourceValueListener;
 import org.ogema.externalviewer.extensions.DefaultScheduleViewerConfigurationProviderExtended;
+import org.ogema.model.action.Action;
 import org.ogema.model.jsonresult.MultiKPIEvalConfiguration;
 import org.ogema.tools.resource.util.ResourceUtils;
 import org.ogema.tools.resource.util.TimeUtils;
@@ -51,6 +58,7 @@ import com.iee.app.evaluationofflinecontrol.gui.KPIPageGWOverviewMultiKPI;
 import com.iee.app.evaluationofflinecontrol.gui.KPIPageGWOverviewMultiKPI.KPIColumn;
 import com.iee.app.evaluationofflinecontrol.gui.KPIPageGWOverviewMultiKPI.PageConfig;
 import com.iee.app.evaluationofflinecontrol.gui.MainPage;
+import com.iee.app.evaluationofflinecontrol.gui.element.RemoteSlotsDBBackupButton;
 import com.iee.app.evaluationofflinecontrol.util.ScheduleViewerConfigProvEvalOff;
 import com.iee.app.evaluationofflinecontrol.util.StandardConfigurations;
 
@@ -64,6 +72,7 @@ import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIPageDefi
 import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.MessageDefinition;
 import de.iwes.timeseries.eval.garo.multibase.KPIStatisticsManagementI;
 import de.iwes.timeseries.eval.generic.gatewayBackupAnalysis.GatewayDataExportI;
+import de.iwes.util.format.StringFormatHelper;
 import de.iwes.util.resource.ValueResourceHelper;
 import de.iwes.util.timer.AbsoluteTimeHelper;
 import de.iwes.util.timer.AbsoluteTiming;
@@ -150,6 +159,7 @@ public class OfflineEvaluationControlController {
 
 	public void close() {
         if(autoTimerMessaging != null) autoTimerMessaging.destroy();
+        if(autoTimerSlotsBackup != null) autoTimerSlotsBackup.destroy();
     }
 
 	/*
@@ -298,6 +308,16 @@ public class OfflineEvaluationControlController {
 				getDataProvidersToUse(), true, om, false, null, providersDone);
 	}
 	
+	public void registerBackupListeners() {
+		//Check for slotsDBBackup
+		if(System.getProperty("org.ogema.eval.utilextended.slotsbackupretardmilli") != null) {
+			if(autoTimerSlotsBackup == null) {
+				log.info("Starting initial AutoQueueTimerSlotsBackup...");
+				autoTimerSlotsBackup = new AutoQueueTimerSlotsBackup(appMan);
+			}
+		}		
+	}
+	
 	public void registerExistingMultiPages( ) {
 		for(KPIPageConfig item: appConfigData.kpiPageConfigs().getAllElements()) {
 			if(item.sourceProviderId().isActive()) {
@@ -309,6 +329,7 @@ public class OfflineEvaluationControlController {
 			if(item.pageId().isActive()) addMultiPage(item);
 		}
 	}
+	
 	public void createMultiPage(KPIPageConfig pageConfig, int intervalsIntoPast, String pageId, boolean autoAdd) {
 		ValueResourceHelper.setCreate(pageConfig.defaultColumnsIntoPast(), intervalsIntoPast);
 		ValueResourceHelper.setCreate(pageConfig.pageId(), pageId);
@@ -634,4 +655,71 @@ public class OfflineEvaluationControlController {
 	public boolean showBackupButton() {
 		return appConfigData.showBackupButton().getValue();
 	}
+	
+	private long getNextAutoQueueTimeSlotsBackup(ApplicationManager appMan) {
+		Long autoQueueStep = Long.getLong("org.ogema.util.evalcontrol.development.slotsbackupStartupRetard");
+		if(autoQueueStep != null) {
+			log.info("Scheduling next message for "+TimeUtils.getDateAndTimeString(appMan.getFrameworkTime()+autoQueueStep)+" based on autoQueueStep");
+			return appMan.getFrameworkTime()+autoQueueStep;
+		}
+		//SlotsDB is aligned according to UTC
+		long nextTime = AbsoluteTimeHelper.getNextStepTime(appMan.getFrameworkTime(), DateTimeZone.UTC.getID(), AbsoluteTiming.DAY);
+		long retard = Long.getLong("org.ogema.eval.utilextended.slotsbackupretardmilli", 0*StandardConfigurations.HOUR_MILLIS)
+				+30*StandardConfigurations.MINUTE_MILLIS;
+		nextTime += retard;
+		log.info("Scheduling next SlotsDB-Backup for "+TimeUtils.getDateAndTimeString(nextTime)+" based on AbsoluteTiming");
+		return nextTime;		
+	}
+    AutoQueueTimerSlotsBackup autoTimerSlotsBackup;
+	class AutoQueueTimerSlotsBackup extends CountDownAbsoluteTimer {
+		
+		public AutoQueueTimerSlotsBackup(ApplicationManager appMan) {
+			super(appMan, getNextAutoQueueTimeSlotsBackup(appMan), new TimerListener() {
+				@Override
+				public void timerElapsed(Timer timer) {
+					performSlotsBackup();
+					autoTimerSlotsBackup = new AutoQueueTimerSlotsBackup(appMan);
+				}
+			});
+		}
+	}
+	
+	public static final String generalBackupSource = "./data/semabox_01/extBackup";
+	private void performSlotsBackup() {
+		Resource resConfig = appMan.getResourceAccess().getResource("resAdminConfig");
+		if(resConfig == null) return;
+		ResourceList<?> configList = resConfig.getSubResource("configList", ResourceList.class);
+		if(!configList.exists()) return;
+		for(Resource el: configList.getAllElements()) {
+			log.debug("Checking Action :"+el.getLocation());
+			StringResource destinationDirectory  = el.getSubResource("destinationDirectory", StringResource.class);
+			if(destinationDirectory.isActive() && destinationDirectory.getValue().startsWith(generalBackupSource)) {
+				log.debug("Performing Action :"+el.getLocation());
+				Action action = el.getSubResource("run", Action.class);
+				if(action != null && action.isActive())
+					performActionBlocking(action, 20000);
+				break;
+			}
+		}
+		long now = appMan.getFrameworkTime();
+		//slotsDB is aligned according to UTC
+		long endTime = AbsoluteTimeHelper.getIntervalStart(now, DateTimeZone.UTC.getID(), AbsoluteTiming.DAY);
+		long startTime = AbsoluteTimeHelper.addIntervalsFromAlignedTime(endTime, -1, DateTimeZone.UTC.getID(), AbsoluteTiming.DAY);
+		//we set the window as noon to noon to have exactly one folder time (=day start) in the interval
+		startTime -= 12*StandardConfigurations.HOUR_MILLIS;
+		endTime -= 12*StandardConfigurations.HOUR_MILLIS;
+		RemoteSlotsDBBackupButton.performSlotsBackup(Paths.get("./data/"), Paths.get("./data/backupzip/remoteSlots"+StringFormatHelper.getDateForPath(now)+".zip"),
+				startTime, endTime, Arrays.asList(new String[] {""}), new File(generalBackupSource), true);
+		
+	}
+
+	@Deprecated //Use version from ActionHelper as soon as it is released
+	public static void performActionBlocking(Action ac, long maxDuration) {
+		ac.stateControl().setValue(true);
+		long maxEnd = System.currentTimeMillis()+maxDuration;
+		while((ac.stateControl().getValue())&&(System.currentTimeMillis() < maxEnd)) {
+			try {Thread.sleep(1000);} catch (InterruptedException e) {e.printStackTrace();}
+		}
+	}
+
 }

@@ -42,7 +42,7 @@ import de.iwes.widgets.html.form.button.Button;
 public abstract class RemoteSlotsDBBackupButton extends Button {
 	private static final long serialVersionUID = 1L;
 	protected final static String basePathStr = System.getProperty("org.smartrplace.analysis.backup.parser.basepath");
-	protected final static Path basePath = Paths.get(basePathStr);
+	protected final static Path basePath = Paths.get(basePathStr!=null?basePathStr:"");
 
 	public static final long MINUTE_MILLIS = 60000;
 	public static final long HOUR_MILLIS = 60 * MINUTE_MILLIS;
@@ -73,7 +73,10 @@ public abstract class RemoteSlotsDBBackupButton extends Button {
 			endTime = itv.multiEnd[itv.multiStart.length-1];
 		}
 		
-		List<File> inputFiles = new ArrayList<>();
+		Path dest = Paths.get("../evaluationresults/remoteSlotsBackup.zip");
+		performSlotsBackup(null, dest, startTime, endTime, gwIDs, null, false);
+		
+		/*List<File> inputFiles = new ArrayList<>();
 		int tsOverallNum = 0;
 		int logFileOverallNum = 0;
 		for(String currentGwId: gwIDs) {
@@ -126,10 +129,94 @@ public abstract class RemoteSlotsDBBackupButton extends Button {
 			logFileOverallNum += logFileNum;
 			System.out.println("Exported data for Gw "+currentGwId+" tsNum:"+tsNum+" logFiles:"+logFileNum);
 		}
-		Path dest = Paths.get("../evaluationresults/remoteSlotsBackup.zip");
 		Path topPath = basePath;
+		Path dest = Paths.get("../evaluationresults/remoteSlotsBackup.zip");
 		ZipUtil.compress(dest, inputFiles, topPath);
-		System.out.println("Exported total tsNum:"+tsOverallNum+" logNum:"+logFileOverallNum+" to "+dest.toString());
+		System.out.println("Exported total tsNum:"+tsOverallNum+" logNum:"+logFileOverallNum+" to "+dest.toString());*/
+	}
+	
+	/** Backup slotsDB into zip-File
+	 * 
+	 * @param sourcePath for single gateway backup provide path upper to slotsDB here (e.g ogema/data)
+	 * @param destination
+	 * @param startTime
+	 * @param endTime
+	 * @param gwIDs for single gateway just provide a list of size 1
+	 * @param generalBackupSource path to directory where zip-file with resources is located
+	 */
+	public static void performSlotsBackup(Path sourcePath, Path destination,
+			long startTime, long endTime, List<String> gwIDs, File generalBackupSource,
+			boolean useFolderTimeOnly) {
+		List<File> inputFiles = new ArrayList<>();
+		int tsOverallNum = 0;
+		int logFileOverallNum = 0;
+		for(String currentGwId: gwIDs) {
+    		Path gwdir;
+    		if(sourcePath != null)
+    			gwdir = sourcePath;
+    		else
+    			gwdir = basePath.resolve(currentGwId);
+
+    		//Resource Zip file
+    		File zipFile = null;
+    		if(generalBackupSource != null) {
+    			zipFile = lastFileModified(generalBackupSource, "generalBackup");    			
+    		} else {
+    			zipFile = lastFileModified(gwdir.toFile(), "generalBackup");
+    		}
+			if(zipFile != null) inputFiles.add(zipFile);
+    		
+    		//First slotsDB
+    		Path logDir = gwdir.resolve("slotsdb");
+			File[] logFiles = logDir.toFile().listFiles(File::isDirectory);
+			//long lastFileTime = -1;
+			int tsNum = 0;
+			if(logFiles != null) for(File lgz: logFiles) {
+				//long fileTime = lgz.lastModified();
+				Path gzFile = lgz.toPath();
+				Long dayStartFile = getSlotsFolderTime(gzFile);
+				if(dayStartFile == null) {
+					continue;
+				}
+				if(useFolderTimeOnly) {
+					if((dayStartFile < startTime || dayStartFile > endTime)) continue;
+				} else {
+					long dayEndFile = lgz.lastModified() + DAY_MILLIS;
+					if((dayEndFile <= startTime || dayStartFile >= endTime)) continue;
+				}
+				//Collection<File> dirFiles dirFiles = FileUtils.listFiles(lgz, null, true);
+				Collection<File> dirFiles = FileUtils.listFiles(lgz, FileFileFilter.FILE,
+						TrueFileFilter.INSTANCE);
+				inputFiles.addAll(dirFiles);
+				tsNum += dirFiles.size();
+			}
+			
+    		//Now event log files
+    		logDir = gwdir.resolve("logs");
+			logFiles = logDir.toFile().listFiles();
+			//long lastFileTime = -1;
+			int logFileNum = 0;
+			if(logFiles != null) for(File lgz: logFiles) {
+				//long fileTime = lgz.lastModified();
+				Path gzFile = lgz.toPath();
+				Long dayStartFile = EventLogParserUtil.getDayStartOfLogFile(gzFile);
+				if(dayStartFile == null) {
+					continue;
+				}
+				long dayEndFile = AbsoluteTimeHelper.getNextStepTime(dayStartFile, AbsoluteTiming.DAY);
+				if((dayEndFile <= startTime || dayStartFile >= endTime)) continue;
+				//lastFileTime = fileTime;
+				inputFiles.add(lgz);
+				logFileNum++;
+			}
+			tsOverallNum += tsNum;
+			logFileOverallNum += logFileNum;
+			System.out.println("Exported data for Gw "+currentGwId+" tsNum:"+tsNum+" logFiles:"+logFileNum);
+		}
+		Path topPath = basePath;
+		ZipUtil.compress(destination, inputFiles, topPath);
+		System.out.println("Exported total tsNum:"+tsOverallNum+" logNum:"+logFileOverallNum+" to "+destination.toString());
+		
 	}
 	
 	public static Long getSlotsFolderTime(Path folder) {

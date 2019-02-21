@@ -351,19 +351,37 @@ public class OfflineEvaluationControl {
 			private static final long serialVersionUID = 1L;
 			
 			public void onGET(OgemaHttpRequest req) {
-				if(resultsSelection.getSelectedItems(req).isEmpty() 
-						|| multiSelectGWs.getSelectedItems(req).isEmpty() 
-						|| (selectPreEval1.getSelectedItem(req) == null && selectPreEval1.isVisible(req))) {
-					disable(req);
-				} else enable(req);
 				if(getStatus(req) >= 0) {
+					if(resultsSelection.getSelectedItems(req).isEmpty() 
+							|| multiSelectGWs.getSelectedItems(req).isEmpty() 
+							|| (selectPreEval1.getSelectedItem(req) == null && selectPreEval1.isVisible(req))) {
+						disable(req);
+					} else enable(req);
 					setText("Start Offline Evaluation", req);
-				} else setText("Schedule Auto-Eval Run", req);
+				} else {
+					enable(req);
+					setText("Schedule Auto-Eval Run", req);
+				}
 			};
 			
 			@Override
 			public void onPrePOST(String data, OgemaHttpRequest req) {
 				
+				GaRoSingleEvalProvider eval = selectProvider.getSelectedItem(req);
+				if(getStatus(req) < 0) {
+					List<MultiKPIEvalConfiguration> configs =
+							app.serviceAccess.evalResultMan().getEvalScheduler().getConfigs(eval.id());
+					for(MultiKPIEvalConfiguration config: configs) {
+						//from EvalSchedulerImpl#startAutoScheduling
+						if(config == null || (!config.isActive())) continue;
+						if((!config.performAutoQueuing().isActive()) ||
+								(!config.performAutoQueuing().getValue())) continue;
+						if(!config.kpisToCalculate().isActive()) continue;
+						app.serviceAccess.evalResultMan().getEvalScheduler().queueAutoEvalConfig(config);
+						break;
+					}
+					return;
+				}
 				//String selectedEvalProvider = selectProvider.getSelectedLabel(req);
 				String config = selectConfig.getSelectedLabel(req);
 				//String singleValue = selectSingleValueIntervals.getSelectedLabel(req);
@@ -373,7 +391,6 @@ public class OfflineEvaluationControl {
 					singleHour = true;
 				ChronoUnit chronoUnit = getChronoUnit(req);	
 			    
-				GaRoSingleEvalProvider eval = selectProvider.getSelectedItem(req);
 				List<String> multiSelectedResults = (List<String>) resultsSelection.getSelectedLabels(req);
 				List<ResultType> resultsRequested = getResultsSelected(multiSelectedResults, eval);
 				List<String> gwIDs = (List<String>) gateWaySelection.multiSelect.getSelectedLabels(req);
@@ -409,15 +426,15 @@ public class OfflineEvaluationControl {
 					preEvalFile = selectPreEval1.getSelectedItem(req).toPath(); //Paths.get(FILE_PATH+"/"+selectPreEval1.getSelectedLabel(req));
 				String jsonFileName = evalName.getValue(req);
 				
-				if(getStatus(req) >= 0)
+				//if(getStatus(req) >= 0)
 					startEvalutionLikeStartPage(jsonFileName, eval, itv, chronoUnit,
 						resultsRequested, gwIDs, om, preEvalFile);
-				else {
+				/*else {
 					MultiKPIEvalConfiguration configLoc = app.getOrCreateEvalConfig(eval.id(), resultsRequested, chronoUnit, gwIDs, true,
 							OfflineEvaluationControlController.APP_AUTO_SUBID);
-					//Same call as in EvalSchedulerImpl.ueueEvalConfig(MultiKPIEvalConfiguration)
+					//Same call as in EvalSchedulerImpl.queueEvalConfig(MultiKPIEvalConfiguration)
 					app.serviceAccess.evalResultMan().getEvalScheduler().queueAutoEvalConfig(configLoc);
-				}
+				}*/
 			}
 		};
 		
