@@ -56,7 +56,7 @@ public class GaRoMultiEvalDataProviderEventlog extends GaRoMultiEvalDataProvider
 	}
 
 	@Override
-	protected List<SelectionItem> getOptions(int level, GaRoSelectionItemEventlog superItem) {
+	public List<SelectionItem> getOptions(int level, GaRoSelectionItemEventlog superItem) {
 		switch(level) {
 		case GaRoMultiEvalDataProvider.GW_LEVEL:
 			if(fixGwSelectionItems) return gwSelectionItems;
