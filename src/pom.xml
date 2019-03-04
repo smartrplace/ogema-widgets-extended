@@ -23,6 +23,7 @@
 		<module>schedule-viewer-expert</module>
 		<module>timeseries-multieval-eventlogdataprovider</module>
 		<module>activate-log-modus</module>
+		<module>timeseries-multieval-dataprovider-csv</module>
     </modules>
 
 </project>

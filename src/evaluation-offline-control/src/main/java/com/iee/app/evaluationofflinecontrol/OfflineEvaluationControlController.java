@@ -704,13 +704,27 @@ public class OfflineEvaluationControlController {
 		long now = appMan.getFrameworkTime();
 		//slotsDB is aligned according to UTC
 		long endTime = AbsoluteTimeHelper.getIntervalStart(now, DateTimeZone.UTC.getID(), AbsoluteTiming.DAY);
-		long startTime = AbsoluteTimeHelper.addIntervalsFromAlignedTime(endTime, -1, DateTimeZone.UTC.getID(), AbsoluteTiming.DAY);
+		
+		long startTime;
+		long startTimeDefault = AbsoluteTimeHelper.addIntervalsFromAlignedTime(endTime, -1, DateTimeZone.UTC.getID(), AbsoluteTiming.DAY);
+		startTimeDefault -= 12*StandardConfigurations.HOUR_MILLIS;
+		if(appConfigData.lastAutoZipBackup().isActive()) {
+			startTime = startTimeDefault;
+		} else {
+			startTime = appConfigData.lastAutoZipBackup().getValue();
+			if(startTime > startTimeDefault)
+				startTime = startTimeDefault;
+		}
 		//we set the window as noon to noon to have exactly one folder time (=day start) in the interval
-		startTime -= 12*StandardConfigurations.HOUR_MILLIS;
 		endTime -= 12*StandardConfigurations.HOUR_MILLIS;
 		RemoteSlotsDBBackupButton.performSlotsBackup(Paths.get("./data/"), Paths.get("./data/backupzip/remoteSlots"+StringFormatHelper.getDateForPath(now)+".zip"),
 				startTime, endTime, Arrays.asList(new String[] {""}), new File(generalBackupSource), true);
-		
+		if(!appConfigData.lastAutoZipBackup().isActive()) {
+			appConfigData.lastAutoZipBackup().create();
+			appConfigData.lastAutoZipBackup().setValue(endTime);
+			appConfigData.lastAutoZipBackup().activate(false);
+		} else
+			appConfigData.lastAutoZipBackup().setValue(endTime);
 	}
 
 	@Deprecated //Use version from ActionHelper as soon as it is released

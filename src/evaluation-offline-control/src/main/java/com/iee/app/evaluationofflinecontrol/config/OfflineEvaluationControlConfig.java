@@ -18,6 +18,7 @@ package com.iee.app.evaluationofflinecontrol.config;
 import org.ogema.core.model.ResourceList;
 import org.ogema.core.model.array.StringArrayResource;
 import org.ogema.core.model.simple.BooleanResource;
+import org.ogema.core.model.simple.TimeResource;
 import org.ogema.model.prototypes.Configuration;
 
 import com.iee.app.evaluationofflinecontrol.gui.OfflineEvaluationControl;
@@ -46,4 +47,7 @@ public interface OfflineEvaluationControlConfig extends Configuration {
 	
 	/** If true in the eval start page a backup button will be offered*/
 	BooleanResource showBackupButton();
+	
+	/** For the Zip-SCP-based Remote Supervision*/
+	TimeResource lastAutoZipBackup();
 }

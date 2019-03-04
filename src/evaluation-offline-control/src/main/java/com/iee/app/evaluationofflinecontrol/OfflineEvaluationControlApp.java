@@ -21,6 +21,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.felix.scr.annotations.Activate;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Reference;
 import org.apache.felix.scr.annotations.ReferenceCardinality;
@@ -31,6 +32,7 @@ import org.ogema.core.application.Application;
 import org.ogema.core.application.ApplicationManager;
 import org.ogema.core.logging.OgemaLogger;
 import org.ogema.util.jsonresult.management.api.EvalResultManagement;
+import org.osgi.framework.BundleContext;
 
 import com.iee.app.evaluationofflinecontrol.gui.ConfigurationPage;
 import com.iee.app.evaluationofflinecontrol.gui.GatewayConfigPage;
@@ -83,7 +85,9 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
     private OgemaLogger log;
     private ApplicationManager appMan;
     private OfflineEvaluationControlController controller;
-
+    private ShellCommandsEOC shellCommands;
+    private BundleContext ctx;
+    
 	public WidgetApp widgetApp;
 	public NavigationMenu menu;
 
@@ -124,6 +128,12 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
 
 	public BasicEvaluationProvider basicEvalProvider = null;
 	EvaluationProvider eval;
+	
+    @Activate
+    protected void activate(BundleContext ctx) {
+    	this.ctx = ctx;
+    }
+
     /*
      * This is the entry point to the application.
      */
@@ -209,6 +219,8 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
 		
 		initDone = true;
 		for(GaRoSingleEvalProvider p: earlyProviders) initGaroProvider(p);
+
+    	shellCommands = new ShellCommandsEOC(controller, ctx); 
 	}
 
      /*
@@ -217,6 +229,9 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
     @Override
     public void stop(AppStopReason reason) {
     	if (widgetApp != null) widgetApp.close();
+ 		if (shellCommands != null)
+ 			shellCommands.close();
+ 		shellCommands = null;
 		if (controller != null)
     		controller.close();
         log.info("{} stopped", getClass().getName());
