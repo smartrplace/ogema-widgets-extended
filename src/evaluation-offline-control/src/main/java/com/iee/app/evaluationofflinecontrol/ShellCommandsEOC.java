@@ -30,7 +30,7 @@ class ShellCommandsEOC {
 	public ShellCommandsEOC(OfflineEvaluationControlController app, BundleContext ctx) {
 		this.app = app; 
 		final Dictionary<String, Object> props = new Hashtable<>();
-    	props.put("osgi.command.scope", "logmodus");
+    	props.put("osgi.command.scope", "evaloff");
 		props.put("osgi.command.function", new String[] {"createSlotsZip"});
 		this.ownService = ctx.registerService(ShellCommandsEOC.class, this, props);
 
@@ -40,8 +40,9 @@ class ShellCommandsEOC {
 		ForkJoinPool.commonPool().submit(ownService::unregister);
 	}
 	
+	@Descriptor("Create Zip file containing slots data for some days for SCP transfer to server")
     public void createSlotsZip(
-    		@Parameter(names= {"-d", "--days"}, absentValue="")
+    		@Parameter(names= {"-d", "--days"}, absentValue="-1")
     		@Descriptor("Days to include into the backup. If negative a zip file for the current day is created.")
     		int daysFromNow) throws IOException {
 		long now = app.appMan.getFrameworkTime();
