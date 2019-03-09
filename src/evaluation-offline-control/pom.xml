@@ -92,12 +92,13 @@
             <groupId>org.ogema.widgets</groupId>
             <artifactId>widget-experimental</artifactId>
         </dependency>
-        <dependency>
+        <!-- <dependency>
             <groupId>de.iwes.sema</groupId>
             <artifactId>gateway-data-export</artifactId>
            <optional>true</optional>
             <version>2.1.2-SNAPSHOT</version>
         </dependency>
+         -->
 		<dependency>
 			<groupId>org.ogema.eval</groupId>
 			<artifactId>timeseries-multieval-garo-base</artifactId>
