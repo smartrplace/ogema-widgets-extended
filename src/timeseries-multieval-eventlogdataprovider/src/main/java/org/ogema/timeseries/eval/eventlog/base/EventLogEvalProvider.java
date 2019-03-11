@@ -1,10 +1,13 @@
 package org.ogema.timeseries.eval.eventlog.base;
 
 import java.io.File;
+import java.io.FileWriter;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Collection;
+import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -15,6 +18,7 @@ import org.ogema.core.model.simple.IntegerResource;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
 import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
+import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,7 +74,10 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     }
 
     public class EvalCore extends GenericGaRoEvaluationCore {
-		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId);
+    	
+    	EventLogIncidents e = new EventLogIncidents();
+    	
+		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId, e);
 		int eventNum = 0;
 		
     	final int size;
@@ -87,7 +94,10 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     	public EvalCore(List<EvaluationInput> input, List<ResultType> requestedResults,
     			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time,
     			int size, int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
-     		this.size = size;
+     		
+    		
+    		
+    		this.size = size;
     		
     		totalTime = startEnd[1] - startEnd[0];
     		startTime = startEnd[0];
@@ -115,6 +125,29 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 				eventNum += fileResult.size();
 			}
 			System.out.println("Finished event log data evaluation in "+this.getClass().getName());
+			
+			
+			try {
+				File dir = new File("EventLogEvaluationResults");
+				dir.mkdirs();
+				String fileName = new SimpleDateFormat("yyyy-MM-dd'.csv'").format(new Date());
+				File file = new File(dir, "EventLog_"+ fileName);
+				file.createNewFile();
+				FileWriter fw = new FileWriter(file, true);
+			
+				e.dumpCSV(fw, currentGwId);
+				
+				fw.append("Start time: " + startTime + "\n");
+				fw.append("End time: " + endTime + "\n");
+				fw.append("Total time: " + totalTime + "\n");
+				fw.append("Incidents: " + e.getTotalIncidents() + "\n");
+				
+				fw.close();
+				
+			} catch(Exception e) {
+				e.printStackTrace();
+			}
+			
        	}
       	
     	/** In processValue the core data processing takes place. This method is called for each input
