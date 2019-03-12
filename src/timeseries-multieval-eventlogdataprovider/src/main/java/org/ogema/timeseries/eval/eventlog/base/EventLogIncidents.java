@@ -1,8 +1,11 @@
 package org.ogema.timeseries.eval.eventlog.base;
 
+import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
@@ -20,9 +23,18 @@ public class EventLogIncidents {
 	
 	private List<EventLogIncidentType> types = new ArrayList<EventLogIncidentType>();
 	
+	private FileWriter fw;
+	
 	public EventLogIncidents() {
 		System.out.println("ELI created.");
 		this.addDefaultTypes();
+		
+		try {
+			this.createCSVFile();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+		}
 	}
 	
 	/**
@@ -139,36 +151,45 @@ public class EventLogIncidents {
 			System.out.println(t.name + " has occured a total of " + t.counter.getSum() + " times.");
 		}
 	}
+
 	
-	/**
-	 * Dump stats in CSV format
-	 * @param fw
-	 * @param gwId
-	 * @throws IOException
-	 */
-	public void dumpCSV(FileWriter fw, String gwId) throws IOException {
+	public void writeCSVHeader() throws IOException {
 		
-		// Header
+		createCSVFile();
+		
 		fw.append("Gateway,");
 		for(EventLogIncidentType t : types ) {
 			fw.append(t.name + ",");
 		}
 		fw.append("\n");
 		
-		// Row
-		fw.append(gwId + ",");
-		for(EventLogIncidentType t : types ) {
-			fw.append(t.counter.getSum() + ",");
-		}
-		fw.append("\n");
+		fw.close();
 	}
 
-	public void writeCSVRow(FileWriter fw, String gwId) throws IOException {
+	public void writeCSVRow(String gwId) throws IOException {
+		
+		createCSVFile();
+		
 		fw.append(gwId + ",");
 		for(EventLogIncidentType t : types ) {
 			fw.append(t.counter.getSum() + ",");
 		}
 		fw.append("\n");
+		
+		fw.close();
+	}
+	
+	public void createCSVFile() throws IOException {
+		File dir = new File("EventLogEvaluationResults");
+		dir.mkdirs();
+		String fileName = new SimpleDateFormat("yyyy-MM-dd'.csv'").format(new Date());
+		File file = new File(dir, "EventLog_"+ fileName);
+		file.createNewFile();
+		fw = new FileWriter(file, true);
+		
+	}
+	public void closeCSVFile() throws IOException {
+		fw.close();
 	}
 	
 	

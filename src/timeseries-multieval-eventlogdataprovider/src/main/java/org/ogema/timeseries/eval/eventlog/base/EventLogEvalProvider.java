@@ -2,6 +2,7 @@ package org.ogema.timeseries.eval.eventlog.base;
 
 import java.io.File;
 import java.io.FileWriter;
+import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -77,6 +78,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     	
     	EventLogIncidents e = new EventLogIncidents();
     	
+    	
+    	
 		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId, e);
 		int eventNum = 0;
 		
@@ -95,7 +98,12 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time,
     			int size, int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
      		
-    		
+    		try {
+				e.writeCSVHeader();
+			} catch (IOException e1) {
+				// TODO Auto-generated catch block
+				e1.printStackTrace();
+			}
     		
     		this.size = size;
     		
@@ -128,22 +136,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			
 			
 			try {
-				File dir = new File("EventLogEvaluationResults");
-				dir.mkdirs();
-				String fileName = new SimpleDateFormat("yyyy-MM-dd'.csv'").format(new Date());
-				File file = new File(dir, "EventLog_"+ fileName);
-				file.createNewFile();
-				FileWriter fw = new FileWriter(file, true);
-			
-				e.dumpCSV(fw, currentGwId);
-				
-				fw.append("Start time: " + startTime + "\n");
-				fw.append("End time: " + endTime + "\n");
-				fw.append("Total time: " + totalTime + "\n");
-				fw.append("Incidents: " + e.getTotalIncidents() + "\n");
-				
-				fw.close();
-				
+				e.writeCSVRow(currentGwId);
 			} catch(Exception e) {
 				e.printStackTrace();
 			}
