@@ -15,11 +15,12 @@ import java.util.Map;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.ogema.core.channelmanager.measurements.SampledValue;
+import org.ogema.core.model.simple.FloatResource;
 import org.ogema.core.model.simple.IntegerResource;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
 import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
-import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
 import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
+import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -83,6 +84,9 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId, e);
 		int eventNum = 0;
 		
+		int incidentCount;
+		float incidentsPerDay;
+		
     	final int size;
  		
  		final long totalTime;
@@ -133,7 +137,9 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 				eventNum += fileResult.size();
 			}
 			System.out.println("Finished event log data evaluation in "+this.getClass().getName());
-			
+
+			incidentCount = e.getTotalIncidents();
+			incidentsPerDay = (float)incidentCount / ( (float)totalTime / DAY_MILLIS );
 			
 			try {
 				e.writeCSVRow(currentGwId, startTime, endTime);
@@ -165,8 +171,32 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			return new SingleValueResultImpl<Integer>(rt, cec.eventNum, inputData);
 		}
     };
+    
+    public final static GenericGaRoResultType INCIDENT_COUNT = new GenericGaRoResultType("INCIDENT_COUNT",
+    		"Number of incidents", IntegerResource.class, null) {
+		@Override
+		public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
+				List<TimeSeriesData> inputData) {
+			EvalCore cec = ((EvalCore)ec);
+			return new SingleValueResultImpl<Integer>(rt, cec.incidentCount, inputData);
+		}
+    };
+    
+    public final static GenericGaRoResultType INCIDENT_FREQ = new GenericGaRoResultType("INCIDENT_FREQ",
+    		"Number of incidents per day", FloatResource.class, null) {
+		@Override
+		public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
+				List<TimeSeriesData> inputData) {
+			EvalCore cec = ((EvalCore)ec);
+			return new SingleValueResultImpl<Float>(rt, cec.incidentsPerDay, inputData);
+		}
+    };
  
-    private static final List<GenericGaRoResultType> RESULTS = Arrays.asList(BOXSTART_NUM);
+    private static final List<GenericGaRoResultType> RESULTS = Arrays.asList(
+    		BOXSTART_NUM, 
+    		INCIDENT_COUNT,
+    		INCIDENT_FREQ
+    		);
     
 	@Override
 	protected List<GenericGaRoResultType> resultTypesGaRo() {
