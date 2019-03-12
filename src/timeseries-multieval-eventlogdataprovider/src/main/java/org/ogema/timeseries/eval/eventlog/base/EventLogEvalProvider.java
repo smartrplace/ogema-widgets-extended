@@ -23,6 +23,7 @@ import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
 import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
+import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -264,8 +265,22 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		return null;
 	}
 	
+	/**
+	 * Detect/Search for significant changes in the given KPIs
+	 * @param kpis
+	 * @param currentTime
+	 * @param kpiResults
+	 * @return
+	 */
 	protected static String detectChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime, String[] kpiResults) {
-		return ""; // TODO
+		
+		String[] resultIds = kpiResults;
+		
+		float downThreshold = 0.0f; // TODO: find good default value; make threshold configurable
+		float upThreshold = 0.0f; // TODO: find good default value; make threshold configurable
+		List<String> idsToCheckAlways = Arrays.asList(kpiResults);
+		
+		return EventLogEvalUtil.detectKPIChanges(kpis, currentTime, resultIds, downThreshold, upThreshold, idsToCheckAlways);
 	}
 	
 	
