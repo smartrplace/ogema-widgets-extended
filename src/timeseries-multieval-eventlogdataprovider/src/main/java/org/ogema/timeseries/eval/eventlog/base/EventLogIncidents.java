@@ -127,7 +127,6 @@ public class EventLogIncidents {
 		types.add(new EventLogIncidentType("OLD_BUNDLE", "n/a", "Inactive bundle found"));
 		types.add(new EventLogIncidentType("SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb"));
 
-		
 	}
 	
 	/**

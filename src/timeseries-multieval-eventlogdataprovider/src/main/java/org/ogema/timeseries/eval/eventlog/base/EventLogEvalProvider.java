@@ -21,6 +21,7 @@ import org.ogema.core.model.simple.IntegerResource;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
 import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
 import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
+import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -34,7 +35,10 @@ import de.iwes.timeseries.eval.api.TimeSeriesData;
 import de.iwes.timeseries.eval.api.configuration.ConfigurationInstance;
 import de.iwes.timeseries.eval.base.provider.utils.SingleValueResultImpl;
 import de.iwes.timeseries.eval.garo.api.base.GaRoDataType;
+import de.iwes.timeseries.eval.garo.multibase.KPIStatisticsManagementI;
+import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIMessageDefinitionProvider;
 import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIPageDefinition;
+import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.MessageDefinition;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoEvaluationCore;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoResultType;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoSingleEvalProviderPreEval;
@@ -205,7 +209,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		return RESULTS;
 	}
 	
-	public final static String[] kpiPageResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY"};	
+	public final static String[] kpiResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY"};	
 	
 	/**
 	 * KPI Page(s)
@@ -216,10 +220,11 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		
 		//Basic quality page (includes basic rexometer evaluation data)
 		KPIPageDefinition def = new KPIPageDefinition();
-		def.resultIds.add(kpiPageResults);
+		def.resultIds.add(kpiResults);
 		def.providerId = Arrays.asList(new String[] {ID});
 		def.configName = LABEL;
 		def.urlAlias = "eventLogEval";
+		def.messageProvider = "eventLogMsgProv";
 		//def.specialIntervalsPerColumn.put("DURATION_HOURS", 1);
 		//def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
 		result.add(def);
@@ -228,6 +233,42 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 
 	}
 
+	// Message generation
+	public static final KPIMessageDefinitionProvider eventLogMsgProv = new KPIMessageDefinitionProvider() {
+
+		@Override
+		public MessageDefinition getMessage(Collection<KPIStatisticsManagementI> kpis, long currentTime) {
+			return new MessageDefinition() {
+				@Override
+				public String getTitle() {
+					return "SEMA Eventlog Evaluation";
+				}
+
+				@Override
+				public String getMessage() {
+					String mes = "Time of message creation: "+TimeUtils.getDateAndTimeString(currentTime)+"\r\n"+
+							" Data Overview: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQualityStd.html\r\n"+
+							" Data Overview including Rexometer: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQuality.html\r\n"+
+							" Evaluation Overview: https://www.ogema-source.net/wiki/display/SEMA/Wettbewerb+und+Feldtest+ab+Mitte+2018\r\n"+
+							detectChanges(kpis, currentTime, kpiResults);
+					return mes;
+				}
+				
+			};
+		}
+	};
+	
+	@Override
+	public KPIMessageDefinitionProvider getMessageProvider(String messageProviderId) {
+		if(messageProviderId.equals("eventLogMsgProv")) return eventLogMsgProv;
+		return null;
+	}
+	
+	protected static String detectChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime, String[] kpiResults) {
+		return ""; // TODO
+	}
+	
+	
 	@Override
 	protected GenericGaRoEvaluationCore initEval(List<EvaluationInput> input, List<ResultType> requestedResults,
 			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time, int size,
