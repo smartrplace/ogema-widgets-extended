@@ -6,6 +6,7 @@ import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Date;
@@ -33,6 +34,7 @@ import de.iwes.timeseries.eval.api.TimeSeriesData;
 import de.iwes.timeseries.eval.api.configuration.ConfigurationInstance;
 import de.iwes.timeseries.eval.base.provider.utils.SingleValueResultImpl;
 import de.iwes.timeseries.eval.garo.api.base.GaRoDataType;
+import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIPageDefinition;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoEvaluationCore;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoResultType;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoSingleEvalProviderPreEval;
@@ -181,8 +183,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			return new SingleValueResultImpl<Integer>(rt, cec.incidentCount, inputData);
 		}
     };
-    
-    public final static GenericGaRoResultType INCIDENT_FREQ = new GenericGaRoResultType("INCIDENT_FREQ",
+
+    public final static GenericGaRoResultType INCIDENTS_PER_DAY = new GenericGaRoResultType("INCIDENTS_PER_DAY",
     		"Number of incidents per day", FloatResource.class, null) {
 		@Override
 		public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
@@ -193,14 +195,37 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     };
  
     private static final List<GenericGaRoResultType> RESULTS = Arrays.asList(
-    		BOXSTART_NUM, 
+//   		BOXSTART_NUM, 
     		INCIDENT_COUNT,
-    		INCIDENT_FREQ
+    		INCIDENTS_PER_DAY
     		);
     
 	@Override
 	protected List<GenericGaRoResultType> resultTypesGaRo() {
 		return RESULTS;
+	}
+	
+	public final static String[] kpiPageResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY"};	
+	
+	/**
+	 * KPI Page(s)
+	 */
+	@Override
+	public List<KPIPageDefinition> getPageDefinitionsOffered() {
+		List<KPIPageDefinition> result = new ArrayList<>();
+		
+		//Basic quality page (includes basic rexometer evaluation data)
+		KPIPageDefinition def = new KPIPageDefinition();
+		def.resultIds.add(kpiPageResults);
+		def.providerId = Arrays.asList(new String[] {ID});
+		def.configName = LABEL;
+		def.urlAlias = "eventLogEval";
+		//def.specialIntervalsPerColumn.put("DURATION_HOURS", 1);
+		//def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
+		result.add(def);
+
+		return result;
+
 	}
 
 	@Override
