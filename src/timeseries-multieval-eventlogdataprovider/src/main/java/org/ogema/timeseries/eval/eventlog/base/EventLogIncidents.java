@@ -119,6 +119,10 @@ public class EventLogIncidents {
 		types.add(t);
 	}
 	
+	/**
+	 * adds the default types. run on construction.
+	 * configure/add default incident types here
+	 */
 	private void addDefaultTypes() {
 		types.add(new EventLogIncidentType("HomematicFehler", "n/a", "discarding write to"));
 		types.add(new EventLogIncidentType("FrameworkRestart", "n/a", "Flushing Data every: "));

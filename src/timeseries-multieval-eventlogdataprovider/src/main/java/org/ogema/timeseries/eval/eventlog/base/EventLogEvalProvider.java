@@ -1,15 +1,12 @@
 package org.ogema.timeseries.eval.eventlog.base;
 
 import java.io.File;
-import java.io.FileWriter;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
-import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Date;
 import java.util.List;
 import java.util.Map;
 
@@ -23,7 +20,6 @@ import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
 import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
-import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -37,9 +33,6 @@ import de.iwes.timeseries.eval.api.configuration.ConfigurationInstance;
 import de.iwes.timeseries.eval.base.provider.utils.SingleValueResultImpl;
 import de.iwes.timeseries.eval.garo.api.base.GaRoDataType;
 import de.iwes.timeseries.eval.garo.multibase.KPIStatisticsManagementI;
-import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIMessageDefinitionProvider;
-import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIPageDefinition;
-import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.MessageDefinition;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoEvaluationCore;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoResultType;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoSingleEvalProviderPreEval;
@@ -74,7 +67,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	/** Provide your data types here*/
 	@Override
 	public GaRoDataType[] getGaRoInputTypes() {
-		return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback};
+		return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback}; // TODO: looks irrelevant can be removed??
 	}
  	
     @Override
@@ -84,9 +77,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 
     public class EvalCore extends GenericGaRoEvaluationCore {
     	
-    	EventLogIncidents e = new EventLogIncidents();
-    	
-    	
+    	EventLogIncidents e = new EventLogIncidents();	
     	
 		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId, e);
 		int eventNum = 0;
