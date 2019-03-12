@@ -136,7 +136,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			
 			
 			try {
-				e.writeCSVRow(currentGwId);
+				e.writeCSVRow(currentGwId, startTime, endTime);
 			} catch(Exception e) {
 				e.printStackTrace();
 			}

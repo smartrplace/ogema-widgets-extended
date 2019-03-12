@@ -157,7 +157,7 @@ public class EventLogIncidents {
 		
 		createCSVFile();
 		
-		fw.append("Gateway,");
+		fw.append("Gateway,startTime,endTime,");
 		for(EventLogIncidentType t : types ) {
 			fw.append(t.name + ",");
 		}
@@ -166,11 +166,13 @@ public class EventLogIncidents {
 		fw.close();
 	}
 
-	public void writeCSVRow(String gwId) throws IOException {
+	public void writeCSVRow(String gwId, long startTime, long endTime) throws IOException {
 		
 		createCSVFile();
 		
 		fw.append(gwId + ",");
+		fw.append(startTime + ",");
+		fw.append(endTime + ",");
 		for(EventLogIncidentType t : types ) {
 			fw.append(t.counter.getSum() + ",");
 		}
