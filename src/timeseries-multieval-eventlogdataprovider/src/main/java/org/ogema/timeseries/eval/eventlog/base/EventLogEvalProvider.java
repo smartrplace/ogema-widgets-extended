@@ -19,6 +19,7 @@ import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
 import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
+import org.ogema.util.kpieval.KPIEvalUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -274,7 +275,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		float upThreshold = 0.0f; // TODO: find good default value; make threshold configurable
 		List<String> idsToCheckAlways = Arrays.asList(kpiResults);
 		
-		return EventLogEvalUtil.detectKPIChanges(kpis, currentTime, resultIds, 
+		return KPIEvalUtil.detectKPIChanges(kpis, currentTime, resultIds, 
 				downThreshold, upThreshold, idsToCheckAlways);
 	}
 	

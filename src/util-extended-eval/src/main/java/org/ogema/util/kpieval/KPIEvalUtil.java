@@ -1,4 +1,4 @@
-package org.ogema.timeseries.eval.eventlog.base; // TODO: Move to org.ogema.timeseries.eval.eventlog.util
+package org.ogema.util.kpieval; // TODO: Move to org.ogema.timeseries.eval.eventlog.util
 
 import java.util.Collection;
 import java.util.List;
@@ -14,7 +14,7 @@ import de.iwes.timeseries.eval.garo.multibase.KPIStatisticsManagementI;
 import de.iwes.util.timer.AbsoluteTiming;
 
 
-public class EventLogEvalUtil {
+public class KPIEvalUtil {
 	
 	public static final int COLUMN_WIDTH = 15;
 	
