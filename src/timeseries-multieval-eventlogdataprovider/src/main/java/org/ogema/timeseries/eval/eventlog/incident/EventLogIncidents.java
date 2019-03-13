@@ -1,4 +1,4 @@
-package org.ogema.timeseries.eval.eventlog.base;
+package org.ogema.timeseries.eval.eventlog.incident;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -9,7 +9,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
-import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
 
 
 /**
@@ -37,24 +36,6 @@ public class EventLogIncidents {
 		this.addDefaultTypes();
 	}
 	
-	/**
-	 * Optional, additional processing filters
-	 */
-	public interface AdditionalFilter {
-		public boolean exec(EventLogResult elr);
-	}
-	
-	/**
-	 * Default filter that lets everything pas
-	 * @author jruckel
-	 *
-	 */
-	public class AllPassFilter implements AdditionalFilter {
-		@Override
-		public boolean exec(EventLogResult elr) {
-			return true;
-		}
-	}
 	
 	
 	/**
@@ -67,7 +48,7 @@ public class EventLogIncidents {
 		public String name;
 		public String description;
 		public String searchString;
-		public AdditionalFilter filter;
+		public IncidentFilter filter;
 		
 		public IncidentCounter counter = new IncidentCounter();
 		
@@ -82,7 +63,8 @@ public class EventLogIncidents {
 			this.name = name;
 			this.description = description;
 			this.searchString = searchString;
-			this.filter = new AllPassFilter();
+			this.filter = new IncidentFilter.AllPassFilter();
+			
 
 		}
 		
@@ -145,22 +127,35 @@ public class EventLogIncidents {
 	 */
 	private void addDefaultTypes() {
 		
-		// Simple types, without addProc
-		types.add(new EventLogIncidentType("FrameworkRestart", "n/a", "Flushing Data every: "));
+		/*
+		 * Simple incidents without filters:
+		 */
 		types.add(new EventLogIncidentType("UPDSERVER_NOCON_EVENT", "n/a", "Error connecting to update server"));
 		types.add(new EventLogIncidentType("TRANSFER_FAIL_HOMEMATIC", "n/a", "PING failed"));
 		types.add(new EventLogIncidentType("OLD_BUNDLE", "n/a", "Inactive bundle found"));
 		
 
-		// Complex types:
-		EventLogIncidentType homematicType = new EventLogIncidentType("HomematicFehler", "n/a", "discarding write to");
-		homematicType.filter = new CooldownFilter(60000);
+		/*
+		 * incidents with filters:
+		 */
+		EventLogIncidentType homematicType = new EventLogIncidentType(
+				"HomematicFehler", "n/a", "discarding write to");
+		homematicType.filter = new IncidentFilter.CooldownFilter(flags, 60000);
 		types.add(homematicType);
 		
-		EventLogIncidentType shutdownDB = new EventLogIncidentType("SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb");
-		shutdownDB.filter = new SetFlagFilter();
+		EventLogIncidentType shutdownDB = new EventLogIncidentType(
+				"SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb");
+		/** This filter sets a flag to indicate a DB shutdown, but does not count the incident itself */
+		shutdownDB.filter = new IncidentFilter.OccurrenceFlagFilter(flags, false);
 		types.add(shutdownDB);
 		
+		EventLogIncidentType frameworkRestartClean = new EventLogIncidentType(
+				"FrameworkRestartClean", "n/a", "Flushing Data every: ");
+		/** This filter checks whether the DB was shut down, indicating a clean shutdown */
+		frameworkRestartClean.filter = new IncidentFilter.CheckOccurrenceFlagFilter(flags, "SHUTDOWN_DB");
+		types.add(frameworkRestartClean);
+		
+		// TODO detect unclean Restarts
 	}
 	
 	/**
@@ -281,79 +276,6 @@ public class EventLogIncidents {
 	}
 	public void closeCSVFile() throws IOException {
 		fw.close();
-	}
-	
-	/**
-	 * Cooldown Filter: incidents of the same type that occur within a minimum duration (default: 1 minute)
-	 * can be ignored.
-	 * @author jruckel
-	 *
-	 */
-	final class CooldownFilter implements AdditionalFilter {
-		
-		long minDuration;
-		
-		/**
-		 * 
-		 * @param minDuration minimum duration between two incidents that is to be counted seperately [minutes]
-		 */
-		public CooldownFilter(long minDuration) {
-			this.minDuration = minDuration;
-		}
-		
-		/**
-		 * minDuration defaults to 1 minute
-		 */
-		public CooldownFilter() {
-			this.minDuration = 60000;
-		}
-		
-		/**
-		 * Reporting is on a cooldown
-		 * TODO: make threshold configurable
-		 */
-		@Override
-		public boolean exec(EventLogResult elr) {
-			
-			final String KEY = "last_err_" + elr.eventId;
-			
-			if (! flags.containsKey(KEY)) {
-				flags.put(KEY, elr.eventTime);
-				return true;
-			}
-			
-			long lastErr = (long) flags.get(KEY);
-			
-			// if less than an hour ago
-			if (elr.eventTime - lastErr < minDuration) {
-				return false;
-			}
-			
-			flags.put(KEY, elr.eventTime);
-			return true;
-		}
-	}
-	
-	/**
-	 * Sets a flag, indicating that an incident has occurred.
-	 * 
-	 * @author jruckel
-	 *
-	 */
-	final class SetFlagFilter implements AdditionalFilter {
-		
-		String eventId;
-		
-		@Override
-		public boolean exec(EventLogResult elr) {
-			if (eventId.isEmpty()) {
-				flags.put("has_occurred_" + elr.eventId, true);
-			}
-			else {
-				flags.put("has_occurred_" + eventId, true);
-			}
-			return true;
-		}
 	}
 	
 }

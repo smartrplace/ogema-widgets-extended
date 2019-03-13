@@ -14,7 +14,8 @@ import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
-import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents.EventLogIncidentType;
+import org.ogema.timeseries.eval.eventlog.incident.EventLogIncidents;
+import org.ogema.timeseries.eval.eventlog.incident.EventLogIncidents.EventLogIncidentType;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.slf4j.Logger;
@@ -172,7 +173,7 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		
 		
 		/**
-		 * @return false if additional processing has decided not to count the incident
+		 * @return false if the filter has determined not to count the incident
 		 */
 		if (! iType.filter.exec(elr)) {
 			return false;
@@ -182,42 +183,17 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		//elr.eventTime = getTimeFromLogLine(line);
 		elr.fullEventString = line;
 
- 		switch (eventName) {
- 		
- 		/*case HOMEMATIC:
-// 			long startOfHour = AbsoluteTimeHelper.getIntervalStart(elr.eventTime, AbsoluteTiming.HOUR);
- 			if(elr.eventTime - prevDt < EventLogEvalProvider.HOUR_MILLIS) return true;
- 			else {
- 				prevDt = elr.eventTime; 
- 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
- 			}
-		 	break;*/
- 		case RESTART_EVENT:											
- 			if (shutdown==null)
- 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName + " - "+"possibly device removed by user or itself restarted without shutdown";
- 			else 
- 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName +" - "+shutdown;
- 				shutdown = null;
-		   	break;
- 		case SHUTDOWN_DB:
- 			shutdown = eventName;
- 			break;
- 		default:
- 			elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
-			break;
- 		}
+
+ 		elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
+
  		elr.gatewayId = gwId;
  		
  		if(elr.eventMessage != null) {
 			System.out.println(elr.eventMessage);
 			pw.append(elr.eventMessage+"\r\n");
  		}
- 		
- 		if(eventName != SHUTDOWN_DB) {
- 			log.info(gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName);
- 		}
- 		
- 		
+
+ 		log.info(gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName);
  		
 		result.add(elr);
 		return true;
