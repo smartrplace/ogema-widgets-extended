@@ -12,9 +12,9 @@ import java.util.List;
 
 /**
  * Keeps track of incidents found in the event log.
- * By default, incidents defined in addDefaultIncidents are searched and accounted for.
+ * By default, incident types defined in addDefaultIncidents are searched and accounted for.
  * 
- * One instance per GW.
+ * One instance is created per EvalCore, i.e. one instance is created for each Gateway and time frame
  * 
  * @author jruckel
  *
@@ -28,17 +28,10 @@ public class EventLogIncidents {
 	public EventLogIncidents() {
 		System.out.println("ELI created.");
 		this.addDefaultTypes();
-		
-		try {
-			this.createCSVFile();
-		} catch (IOException e) {
-			// TODO Auto-generated catch block
-			e.printStackTrace();
-		}
 	}
 	
 	/**
-	 * A type of incident e. g. a Homematic Error
+	 * A type of incident e.g. a Homematic Error
 	 * @author jruckel
 	 *
 	 */
@@ -52,7 +45,7 @@ public class EventLogIncidents {
 		
 		/**
 		 * 
-		 * @param name
+		 * @param name formerly ID
 		 * @param description
 		 * @param searchString String by which the incident can be found in the logfiles
 		 */
@@ -70,7 +63,7 @@ public class EventLogIncidents {
 		 *
 		 */
 		public class IncidentCounter {
-			// Date --> Count
+			/** Date --> Count */
 			private HashMap<String, Integer> count = new HashMap<String, Integer>();
 			
 			/**
@@ -89,7 +82,7 @@ public class EventLogIncidents {
 			
 			/**
 			 * Get number of incidents across all dates processed
-			 * @return
+			 * @return sum
 			 */
 			public int getSum() {
 				int sum = 0;
@@ -131,7 +124,7 @@ public class EventLogIncidents {
 	}
 	
 	/**
-	 * Get number of incidents across all processed days and types of incident
+	 * Get total number of incidents across all types of incidents
 	 * @return
 	 */
 	public int getTotalIncidents() {
@@ -153,11 +146,15 @@ public class EventLogIncidents {
 		}
 	}
 
-	/*
+	/**
+	 * Write header row to CSV
+	 * 
 	 * TODO: Fix multiple headers being written
 	 * writeCSVHeader() is called from EvalCore, which is created for each part (i.e. GW and Interval) of the
 	 * Offline Evaluation. Thus, the CSV has duplicate header rows.
 	 * Workaround: `sort -ur <File>.csv > <File>.unique.csv`
+	 * 
+	 * @return false on IOException
 	 */
 	public boolean writeCSVHeader() {
 		
@@ -174,6 +171,15 @@ public class EventLogIncidents {
 		return writeCSVCols(cols);
 	}
 
+	/**
+	 * Write a row of data i.e. the sums of each type of incident for a Gateway (gwId) 
+	 * in a time frame (startTime - endTime).
+	 * 
+	 * @param gwId
+	 * @param startTime
+	 * @param endTime
+	 * @return false on IOException
+	 */
 	public boolean writeCSVRow(String gwId, long startTime, long endTime) {
 		
 		List<String> cols = new ArrayList<String>();
@@ -195,7 +201,7 @@ public class EventLogIncidents {
 	/**
 	 * Write columns to the CSV output
 	 * @param cols
-	 * @return false if an IOException occured
+	 * @return false if an IOException occurred
 	 */
 	private boolean writeCSVCols(List<String> cols) {
 		
@@ -219,6 +225,10 @@ public class EventLogIncidents {
 		return true;
 	}
 	
+	/**
+	 * Create / open the CSV output file
+	 * @throws IOException
+	 */
 	public void createCSVFile() throws IOException {
 		
 		File dir = new File("EventLogEvaluationResults");
