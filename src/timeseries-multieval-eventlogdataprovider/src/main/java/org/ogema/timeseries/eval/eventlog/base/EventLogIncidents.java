@@ -9,6 +9,8 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 
+import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
+
 
 /**
  * Keeps track of incidents found in the event log.
@@ -25,10 +27,35 @@ public class EventLogIncidents {
 	
 	private FileWriter fw;
 	
+	/**
+	 * Example: timestamp of last incident, thus allowing for a cooldown on incident reporting
+	 */
+	private HashMap<String, Object> flags = new HashMap<>();
+	
 	public EventLogIncidents() {
 		System.out.println("ELI created.");
 		this.addDefaultTypes();
 	}
+	
+	/**
+	 * Override with additional processing
+	 */
+	public interface AdditionalProcessing {
+		public boolean exec(EventLogResult elr);
+	}
+	
+	/**
+	 * No additional processing done by default
+	 * @author jruckel
+	 *
+	 */
+	public class DefaultAddProc implements AdditionalProcessing {
+		@Override
+		public boolean exec(EventLogResult elr) {
+			return true;
+		}
+	}
+	
 	
 	/**
 	 * A type of incident e.g. a Homematic Error
@@ -40,6 +67,7 @@ public class EventLogIncidents {
 		public String name;
 		public String description;
 		public String searchString;
+		public AdditionalProcessing addProc;
 		
 		public IncidentCounter counter = new IncidentCounter();
 		
@@ -50,9 +78,11 @@ public class EventLogIncidents {
 		 * @param searchString String by which the incident can be found in the logfiles
 		 */
 		public EventLogIncidentType(String name, String description, String searchString) {
+			
 			this.name = name;
 			this.description = description;
 			this.searchString = searchString;
+			this.addProc = new DefaultAddProc();
 
 		}
 		
@@ -114,13 +144,47 @@ public class EventLogIncidents {
 	 * configure/add default incident types here
 	 */
 	private void addDefaultTypes() {
-		types.add(new EventLogIncidentType("HomematicFehler", "n/a", "discarding write to"));
+		
+		// Simple types, without addProc
 		types.add(new EventLogIncidentType("FrameworkRestart", "n/a", "Flushing Data every: "));
 		types.add(new EventLogIncidentType("UPDSERVER_NOCON_EVENT", "n/a", "Error connecting to update server"));
 		types.add(new EventLogIncidentType("TRANSFER_FAIL_HOMEMATIC", "n/a", "PING failed"));
 		types.add(new EventLogIncidentType("OLD_BUNDLE", "n/a", "Inactive bundle found"));
 		types.add(new EventLogIncidentType("SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb"));
 
+		// Complex types:
+		
+		final class HomematicProcessing implements AdditionalProcessing {
+			
+			/**
+			 * Reporting is on a cooldown
+			 * TODO: move to a generic 'CooldownAddProc'
+			 */
+			@Override
+			public boolean exec(EventLogResult elr) {
+				
+				final String KEY = "last_err_" + elr.eventId;
+				
+				if (! flags.containsKey(KEY)) {
+					flags.put(KEY, elr.eventTime);
+					return true;
+				}
+				
+				long lastErr = (long) flags.get(KEY);
+				
+				// if less than an hour ago
+				if (elr.eventTime - lastErr < 60000 * 60) {
+					return false;
+				}
+				
+				flags.put(KEY, elr.eventTime);
+				return true;
+			}
+		}
+		EventLogIncidentType homematicType = new EventLogIncidentType("HomematicFehler", "n/a", "discarding write to");
+		homematicType.addProc = new HomematicProcessing();
+		types.add(homematicType);
+		
 	}
 	
 	/**
