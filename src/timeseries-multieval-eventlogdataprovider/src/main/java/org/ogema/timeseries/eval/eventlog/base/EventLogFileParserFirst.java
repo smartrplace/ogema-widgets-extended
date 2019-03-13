@@ -174,7 +174,7 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		/**
 		 * @return false if additional processing has decided not to count the incident
 		 */
-		if (! iType.addProc.exec(elr)) {
+		if (! iType.filter.exec(elr)) {
 			return false;
 		}
 		

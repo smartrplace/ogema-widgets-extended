@@ -38,18 +38,18 @@ public class EventLogIncidents {
 	}
 	
 	/**
-	 * Override with additional processing
+	 * Optional, additional processing filters
 	 */
-	public interface AdditionalProcessing {
+	public interface AdditionalFilter {
 		public boolean exec(EventLogResult elr);
 	}
 	
 	/**
-	 * No additional processing done by default
+	 * Default filter that lets everything pas
 	 * @author jruckel
 	 *
 	 */
-	public class DefaultAddProc implements AdditionalProcessing {
+	public class AllPassFilter implements AdditionalFilter {
 		@Override
 		public boolean exec(EventLogResult elr) {
 			return true;
@@ -67,7 +67,7 @@ public class EventLogIncidents {
 		public String name;
 		public String description;
 		public String searchString;
-		public AdditionalProcessing addProc;
+		public AdditionalFilter filter;
 		
 		public IncidentCounter counter = new IncidentCounter();
 		
@@ -82,7 +82,7 @@ public class EventLogIncidents {
 			this.name = name;
 			this.description = description;
 			this.searchString = searchString;
-			this.addProc = new DefaultAddProc();
+			this.filter = new AllPassFilter();
 
 		}
 		
@@ -150,40 +150,16 @@ public class EventLogIncidents {
 		types.add(new EventLogIncidentType("UPDSERVER_NOCON_EVENT", "n/a", "Error connecting to update server"));
 		types.add(new EventLogIncidentType("TRANSFER_FAIL_HOMEMATIC", "n/a", "PING failed"));
 		types.add(new EventLogIncidentType("OLD_BUNDLE", "n/a", "Inactive bundle found"));
-		types.add(new EventLogIncidentType("SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb"));
+		
 
 		// Complex types:
-		
-		final class HomematicProcessing implements AdditionalProcessing {
-			
-			/**
-			 * Reporting is on a cooldown
-			 * TODO: move to a generic 'CooldownAddProc'
-			 */
-			@Override
-			public boolean exec(EventLogResult elr) {
-				
-				final String KEY = "last_err_" + elr.eventId;
-				
-				if (! flags.containsKey(KEY)) {
-					flags.put(KEY, elr.eventTime);
-					return true;
-				}
-				
-				long lastErr = (long) flags.get(KEY);
-				
-				// if less than an hour ago
-				if (elr.eventTime - lastErr < 60000 * 60) {
-					return false;
-				}
-				
-				flags.put(KEY, elr.eventTime);
-				return true;
-			}
-		}
 		EventLogIncidentType homematicType = new EventLogIncidentType("HomematicFehler", "n/a", "discarding write to");
-		homematicType.addProc = new HomematicProcessing();
+		homematicType.filter = new CooldownFilter(60);
 		types.add(homematicType);
+		
+		EventLogIncidentType shutdownDB = new EventLogIncidentType("SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb");
+		shutdownDB.filter = new SetFlagFilter();
+		types.add(shutdownDB);
 		
 	}
 	
@@ -307,5 +283,77 @@ public class EventLogIncidents {
 		fw.close();
 	}
 	
+	/**
+	 * Cooldown Filter: incidents of the same type that occur within a minimum duration (default: 1 minute)
+	 * can be ignored.
+	 * @author jruckel
+	 *
+	 */
+	final class CooldownFilter implements AdditionalFilter {
+		
+		long minDuration;
+		
+		/**
+		 * 
+		 * @param minDurationMinutes minimum duration between two incidents that is to be counted seperately [minutes]
+		 */
+		public CooldownFilter(long minDurationMinutes) {
+			this.minDuration = minDurationMinutes * 60000;
+		}
+		
+		/**
+		 * minDuration defaults to 1 minute
+		 */
+		public CooldownFilter() {
+			this.minDuration = 60000;
+		}
+		
+		/**
+		 * Reporting is on a cooldown
+		 * TODO: make threshold configurable
+		 */
+		@Override
+		public boolean exec(EventLogResult elr) {
+			
+			final String KEY = "last_err_" + elr.eventId;
+			
+			if (! flags.containsKey(KEY)) {
+				flags.put(KEY, elr.eventTime);
+				return true;
+			}
+			
+			long lastErr = (long) flags.get(KEY);
+			
+			// if less than an hour ago
+			if (elr.eventTime - lastErr < minDuration) {
+				return false;
+			}
+			
+			flags.put(KEY, elr.eventTime);
+			return true;
+		}
+	}
+	
+	/**
+	 * Sets a flag, indicating that an incident has occurred.
+	 * 
+	 * @author jruckel
+	 *
+	 */
+	final class SetFlagFilter implements AdditionalFilter {
+		
+		String eventId;
+		
+		@Override
+		public boolean exec(EventLogResult elr) {
+			if (eventId.isEmpty()) {
+				flags.put("has_occurred_" + elr.eventId, true);
+			}
+			else {
+				flags.put("has_occurred_" + eventId, true);
+			}
+			return true;
+		}
+	}
 	
 }
