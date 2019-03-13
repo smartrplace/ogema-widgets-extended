@@ -271,8 +271,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		
 		String[] resultIds = kpiResults;
 		
-		float downThreshold = 0.0f; // TODO: find good default value; make threshold configurable
-		float upThreshold = 0.0f; // TODO: find good default value; make threshold configurable
+		float downThreshold = 0.75f; // TODO: find good default value; make threshold configurable
+		float upThreshold = 1.5f; // TODO: find good default value; make threshold configurable
 		List<String> idsToCheckAlways = Arrays.asList(kpiResults);
 		
 		return KPIEvalUtil.detectKPIChanges(kpis, currentTime, resultIds, 
