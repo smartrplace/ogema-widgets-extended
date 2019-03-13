@@ -124,7 +124,7 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	public boolean checkEvent(String trim, EventLogIncidentType incidentType, boolean doLog, 
 			List<EventLogResult> result, long dayStart) throws IOException {
 			
-		boolean eventFound = checkEvent(trim, incidentType.searchString, incidentType.name, doLog, result, dayStart);
+		boolean eventFound = checkEvent(trim, incidentType.searchString, incidentType.name, doLog, result, dayStart, incidentType);
 		
 		if (eventFound) {
 			String date = new SimpleDateFormat("yyyy-MM-dd'.txt'").format(dayStart);
@@ -137,7 +137,8 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 
 	/** 
 	 * Check if event is in log file line and perform reporting if so
-	 * 
+	 * FIXME update docstring
+	 * TODO cleanup
 	 * @param line
 	 * @param searchString string to search for
 	 * @param eventName
@@ -148,7 +149,7 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	 * @throws IOException
 	 */
 	public boolean checkEvent(String line, String searchString, String eventName, boolean doLog,  
-			List<EventLogResult> result, long dayStart) throws IOException {
+			List<EventLogResult> result, long dayStart, EventLogIncidentType iType) throws IOException {
 		
 		if(!line.contains(searchString)) return false;
 		
@@ -168,20 +169,29 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 			System.out.println(" !!!!!!!! No time string in line:"+line);
 			return true;
 		}
+		
+		
+		/**
+		 * @return false if additional processing has decided not to count the incident
+		 */
+		if (! iType.filter.exec(elr)) {
+			return false;
+		}
+		
 		elr.eventId = eventName;
 		//elr.eventTime = getTimeFromLogLine(line);
 		elr.fullEventString = line;
 
  		switch (eventName) {
  		
- 		case HOMEMATIC:
+ 		/*case HOMEMATIC:
 // 			long startOfHour = AbsoluteTimeHelper.getIntervalStart(elr.eventTime, AbsoluteTiming.HOUR);
  			if(elr.eventTime - prevDt < EventLogEvalProvider.HOUR_MILLIS) return true;
  			else {
  				prevDt = elr.eventTime; 
  				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
  			}
-		 	break;
+		 	break;*/
  		case RESTART_EVENT:											
  			if (shutdown==null)
  				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName + " - "+"possibly device removed by user or itself restarted without shutdown";
