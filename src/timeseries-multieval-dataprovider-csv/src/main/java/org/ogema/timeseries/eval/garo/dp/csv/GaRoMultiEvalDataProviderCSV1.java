@@ -61,7 +61,8 @@ public class GaRoMultiEvalDataProviderCSV1 extends GaRoMultiEvalDataProvider<GaR
 	public static final String PROVIDER_ID = "GaRoMultiEvalDataProviderCSV1";
 	public static final String SINGLE_GATEWAY_ID_PROPERTY = "org.ogema.timeseries.eval.garo.dp.csv1.gatewayid";
 	public static final List<String> gwIds = Arrays.asList(new String[] {System.getProperty(SINGLE_GATEWAY_ID_PROPERTY)});
-	public static final Path csvFileDirectory = Paths.get("../csvtimeseries");
+	/** Directory where DataProvider searches for CSV files*/
+	public static final Path csvFileDirectory = Paths.get("./csvtimeseries");
 	public static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 	
 	private List<SelectionItem> gwSelectionItems = null;
