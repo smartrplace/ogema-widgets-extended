@@ -154,7 +154,7 @@ public class EventLogIncidents {
 
 		// Complex types:
 		EventLogIncidentType homematicType = new EventLogIncidentType("HomematicFehler", "n/a", "discarding write to");
-		homematicType.filter = new CooldownFilter(60);
+		homematicType.filter = new CooldownFilter(60000);
 		types.add(homematicType);
 		
 		EventLogIncidentType shutdownDB = new EventLogIncidentType("SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb");
@@ -295,10 +295,10 @@ public class EventLogIncidents {
 		
 		/**
 		 * 
-		 * @param minDurationMinutes minimum duration between two incidents that is to be counted seperately [minutes]
+		 * @param minDuration minimum duration between two incidents that is to be counted seperately [minutes]
 		 */
-		public CooldownFilter(long minDurationMinutes) {
-			this.minDuration = minDurationMinutes * 60000;
+		public CooldownFilter(long minDuration) {
+			this.minDuration = minDuration;
 		}
 		
 		/**
