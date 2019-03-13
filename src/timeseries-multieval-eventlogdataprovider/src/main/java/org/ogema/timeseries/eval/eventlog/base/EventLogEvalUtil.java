@@ -13,6 +13,7 @@ import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider;
 import de.iwes.timeseries.eval.garo.multibase.KPIStatisticsManagementI;
 import de.iwes.util.timer.AbsoluteTiming;
 
+
 public class EventLogEvalUtil {
 	
 	public static final int COLUMN_WIDTH = 15;

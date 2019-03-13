@@ -65,7 +65,7 @@ public class EventLogIncidents {
 		
 		
 		/**
-		 * Counts occurences of an incident type per day
+		 * Counts occurrences of an incident type per day
 		 * @author jruckel
 		 *
 		 */
@@ -103,10 +103,7 @@ public class EventLogIncidents {
 		
 	}
 	
-	/**
-	 * 
-	 * @return
-	 */
+	
 	public List<EventLogIncidentType> getTypes() {
 		return types;
 	}
@@ -148,6 +145,7 @@ public class EventLogIncidents {
 	/**
 	 * Dump some basic stats to console
 	 */
+	@Deprecated
 	public void dumpStats() {
 		System.out.println("Dumping EventLog stats:");
 		for(EventLogIncidentType t : types) {
@@ -155,36 +153,74 @@ public class EventLogIncidents {
 		}
 	}
 
-	
-	public void writeCSVHeader() throws IOException {
+	/*
+	 * TODO: Fix multiple headers being written
+	 * writeCSVHeader() is called from EvalCore, which is created for each part (i.e. GW and Interval) of the
+	 * Offline Evaluation. Thus, the CSV has duplicate header rows.
+	 * Workaround: `sort -ur <File>.csv > <File>.unique.csv`
+	 */
+	public boolean writeCSVHeader() {
 		
-		createCSVFile();
+		List<String> cols = new ArrayList<String>();
+
+		cols.add("Gateway");
+		cols.add("startTime");
+		cols.add("endTime");
 		
-		fw.append("Gateway,startTime,endTime,");
 		for(EventLogIncidentType t : types ) {
-			fw.append(t.name + ",");
+			cols.add(t.name);
 		}
-		fw.append("\n");
-		
-		fw.close();
+
+		return writeCSVCols(cols);
 	}
 
-	public void writeCSVRow(String gwId, long startTime, long endTime) throws IOException {
+	public boolean writeCSVRow(String gwId, long startTime, long endTime) {
 		
-		createCSVFile();
+		List<String> cols = new ArrayList<String>();
 		
-		fw.append(gwId + ",");
-		fw.append(startTime + ",");
-		fw.append(endTime + ",");
+		cols.add(gwId);
+		cols.add(String.valueOf(startTime));
+		cols.add(String.valueOf(endTime));
+		
 		for(EventLogIncidentType t : types ) {
-			fw.append(t.counter.getSum() + ",");
+			cols.add(
+					String.valueOf(t.counter.getSum())
+					);
 		}
-		fw.append("\n");
+
+		return writeCSVCols(cols);
+
+	}
+	
+	/**
+	 * Write columns to the CSV output
+	 * @param cols
+	 * @return false if an IOException occured
+	 */
+	private boolean writeCSVCols(List<String> cols) {
 		
-		fw.close();
+		String line = "";
+		for(String col : cols) {
+			line += col + ",";
+		}
+		line = line.substring(0, line.length() - 1) + "\n";
+		
+			
+		try {
+			createCSVFile();
+			fw.append(line);
+			fw.close();
+		} catch (IOException e) {
+			// TODO Auto-generated catch block
+			e.printStackTrace();
+			return false;
+		}
+	
+		return true;
 	}
 	
 	public void createCSVFile() throws IOException {
+		
 		File dir = new File("EventLogEvaluationResults");
 		dir.mkdirs();
 		String fileName = new SimpleDateFormat("yyyy-MM-dd'.csv'").format(new Date());

@@ -1,7 +1,6 @@
 package org.ogema.timeseries.eval.eventlog.base;
 
 import java.io.File;
-import java.io.IOException;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.ArrayList;
@@ -53,7 +52,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	public static final long HOUR_MILLIS = 60 * MINUTE_MILLIS;
 	public static final long DAY_MILLIS = 24 * HOUR_MILLIS;
 		
-	/** Adapt these values to your provider*/
+	/* Provider Information */
     public final static String ID = "basic-eventlog_eval_provider";
     public final static String LABEL = "Basic EventLog: Startup events";
     public final static String DESCRIPTION = "Basic EventLog: Provides critical event evaluation";
@@ -64,10 +63,15 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
         super(ID, LABEL, DESCRIPTION);
     }
 
-	/** Provide your data types here*/
+	/* Provide your data types here*/
 	@Override
 	public GaRoDataType[] getGaRoInputTypes() {
-		return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback}; // TODO: looks irrelevant can be removed??
+		/*
+		 * Even though we're not processing any GaRoInputTypes, this function may
+		 * not return an empty array or an IllegalArgumentException will be thrown
+		 * and evaluation aborted.
+		 */
+		return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback}; 
 	}
  	
     @Override
@@ -77,9 +81,9 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 
     public class EvalCore extends GenericGaRoEvaluationCore {
     	
-    	EventLogIncidents e = new EventLogIncidents();	
+    	EventLogIncidents eli = new EventLogIncidents();
     	
-		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId, e);
+		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId, eli);
 		int eventNum = 0;
 		
 		int incidentCount;
@@ -100,12 +104,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time,
     			int size, int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
      		
-    		try {
-				e.writeCSVHeader();
-			} catch (IOException e1) {
-				// TODO Auto-generated catch block
-				e1.printStackTrace();
-			}
+    		
+			eli.writeCSVHeader();
     		
     		this.size = size;
     		
@@ -120,6 +120,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			File[] logFiles = logDir.toFile().listFiles();
 			//long lastFileTime = -1;
 			boolean allFiles = Boolean.getBoolean("org.ogema.timeseries.eval.eventlog.base.allfiles");
+			
 			if(logFiles != null) for(File lgz: logFiles) {
 				//long fileTime = lgz.lastModified();
 				Path gzFile = lgz.toPath();
@@ -131,19 +132,20 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 				if((dayEndFile <= startTime || dayStartFile >= endTime)&&(!allFiles)) continue;
 				//lastFileTime = fileTime;
 				
-				Map<String, List<EventLogResult>> fileResult = EventLogParserUtil.processNewGzLogFile(gzFile , fileParser, null, dayStartFile);
+				Map<String, List<EventLogResult>> fileResult = EventLogParserUtil.processNewGzLogFile(gzFile, 
+						fileParser, null, dayStartFile);
+				
 				eventNum += fileResult.size();
 			}
+			
 			System.out.println("Finished event log data evaluation in "+this.getClass().getName());
 
-			incidentCount = e.getTotalIncidents();
+			incidentCount = eli.getTotalIncidents();
 			incidentsPerDay = (float)incidentCount / ( (float)totalTime / DAY_MILLIS );
 			
-			try {
-				e.writeCSVRow(currentGwId, startTime, endTime);
-			} catch(Exception e) {
-				e.printStackTrace();
-			}
+			
+			eli.writeCSVRow(currentGwId, startTime, endTime);
+	
 			
        	}
       	
@@ -208,9 +210,9 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	 */
 	@Override
 	public List<KPIPageDefinition> getPageDefinitionsOffered() {
-		List<KPIPageDefinition> result = new ArrayList<>();
 		
-		//Basic quality page (includes basic rexometer evaluation data)
+		List<KPIPageDefinition> result = new ArrayList<>();
+
 		KPIPageDefinition def = new KPIPageDefinition();
 		def.resultIds.add(kpiResults);
 		def.providerId = Arrays.asList(new String[] {ID});
@@ -219,13 +221,13 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		def.messageProvider = "eventLogMsgProv";
 		//def.specialIntervalsPerColumn.put("DURATION_HOURS", 1);
 		//def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
+		
 		result.add(def);
-
 		return result;
-
 	}
 
 	// Message generation
+	// TODO: Don't send a message when no KPI Jumps/Changes detected
 	public static final KPIMessageDefinitionProvider eventLogMsgProv = new KPIMessageDefinitionProvider() {
 
 		@Override
@@ -242,7 +244,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 							" Data Overview: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQualityStd.html\r\n"+
 							" Data Overview including Rexometer: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQuality.html\r\n"+
 							" Evaluation Overview: https://www.ogema-source.net/wiki/display/SEMA/Wettbewerb+und+Feldtest+ab+Mitte+2018\r\n"+
-							detectChanges(kpis, currentTime, kpiResults);
+							detectKPIChanges(kpis, currentTime, kpiResults);
 					return mes;
 				}
 				
@@ -263,7 +265,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	 * @param kpiResults
 	 * @return
 	 */
-	protected static String detectChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime, String[] kpiResults) {
+	protected static String detectKPIChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime, 
+			String[] kpiResults) {
 		
 		String[] resultIds = kpiResults;
 		
@@ -271,7 +274,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		float upThreshold = 0.0f; // TODO: find good default value; make threshold configurable
 		List<String> idsToCheckAlways = Arrays.asList(kpiResults);
 		
-		return EventLogEvalUtil.detectKPIChanges(kpis, currentTime, resultIds, downThreshold, upThreshold, idsToCheckAlways);
+		return EventLogEvalUtil.detectKPIChanges(kpis, currentTime, resultIds, 
+				downThreshold, upThreshold, idsToCheckAlways);
 	}
 	
 	
@@ -279,7 +283,9 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	protected GenericGaRoEvaluationCore initEval(List<EvaluationInput> input, List<ResultType> requestedResults,
 			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time, int size,
 			int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
-		return new EvalCore(input, requestedResults, configurations, listener, time, size, nrInput, idxSumOfPrevious, startEnd);
+		
+		return new EvalCore(input, requestedResults, configurations, listener, time, size, nrInput, 
+				idxSumOfPrevious, startEnd);
 	}
 
 	@Override
