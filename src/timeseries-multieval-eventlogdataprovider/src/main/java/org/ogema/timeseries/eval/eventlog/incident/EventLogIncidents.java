@@ -12,6 +12,8 @@ import org.ogema.timeseries.eval.eventlog.incident.IncidentFilter;
 
 
 /**
+ * ELI provides management/tracking of eventlog incidents.
+ * 
  * Keeps track of incidents found in the event log.
  * By default, incident types defined in addDefaultIncidents are searched and accounted for.
  * 
@@ -125,13 +127,6 @@ public class EventLogIncidents {
 		return new EventLogIncidentType("NULL", "n/a", "");
 	}
 
-	/**
-	 * Add an incident type
-	 * @param t
-	 */
-	public void addType(EventLogIncidentType t) {
-		types.add(t);
-	}
 	
 	/**
 	 * adds the default types. run on construction.
@@ -142,34 +137,35 @@ public class EventLogIncidents {
 		/*
 		 * Simple incidents without filters:
 		 */
-		types.add(new EventLogIncidentType("UPDSERVER_NOCON_EVENT", "n/a", "Error connecting to update server"));
-		types.add(new EventLogIncidentType("TRANSFER_FAIL_HOMEMATIC", "n/a", "PING failed"));
-		types.add(new EventLogIncidentType("OLD_BUNDLE", "n/a", "Inactive bundle found"));
+		types.add(new EventLogIncidentType("UPDSERVER_NOCON_EVENT", "Err. connecting to update server", 
+				"Error connecting to update server"));
+		types.add(new EventLogIncidentType("TRANSFER_FAIL_HOMEMATIC", "Homematic Transfer Fail", "PING failed"));
+		types.add(new EventLogIncidentType("OLD_BUNDLE", "Inactive/Old bundle", "Inactive bundle found"));
 		
 
 		/*
 		 * incidents with filters:
 		 */
 		EventLogIncidentType homematicErr = new EventLogIncidentType(
-				"HOMEMATIC_ERR", "n/a", "discarding write to");
-		homematicErr.filter = new IncidentFilter.CooldownFilter(flags, 60_000);
+				"HOMEMATIC_ERR", "Homematic Error", "discarding write to");
+		homematicErr.filter = new IncidentFilter.CooldownFilter(flags, 3_600_000);
 		types.add(homematicErr);
 		
 		EventLogIncidentType shutdownDB = new EventLogIncidentType(
-				"SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb");
+				"SHUTDOWN_DB", "FendoDB shutdown", "Closing FendoDB data/slotsdb");
 		/** This filter sets a flag to indicate a DB shutdown, but does not count the incident itself */
 		shutdownDB.filter = new IncidentFilter.OccurrenceFlagFilter(flags, false);
 		shutdownDB.display = false; // since this is only a "helper incident", no need to display on KPI page
 		types.add(shutdownDB);
 		
 		EventLogIncidentType frameworkRestartClean = new EventLogIncidentType(
-				"FW_RESTART_CLEAN", "n/a", "Flushing Data every: ");
+				"FW_RESTART_CLEAN", "clean restart, device likeley restarted on its own", "Flushing Data every: ");
 		/** This filter checks whether the DB was shut down, indicating a clean shutdown */
 		frameworkRestartClean.filter = new IncidentFilter.CheckOccurrenceFlagFilter(flags, "SHUTDOWN_DB");
 		types.add(frameworkRestartClean);
 		
 		EventLogIncidentType frameworkRestartUnclean = new EventLogIncidentType(
-				"FW_RESTART_UNCLEAN", "n/a", "Flushing Data every: ");
+				"FW_RESTART_UNCLEAN", "unclean restart, device likely restarted forcibly", "Flushing Data every: ");
 		/** This filter checks whether the DB was shut down, indicating a clean shutdown */
 		frameworkRestartUnclean.filter = new IncidentFilter.CheckOccurrenceFlagFilter(flags, "SHUTDOWN_DB");
 		frameworkRestartUnclean.reverseFilter = true;

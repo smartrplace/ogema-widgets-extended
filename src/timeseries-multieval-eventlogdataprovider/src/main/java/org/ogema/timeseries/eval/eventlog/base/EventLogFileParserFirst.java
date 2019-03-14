@@ -30,7 +30,7 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	protected final Logger log;
 	protected final String gwId;
 
-	private PrintWriter pw ;
+	private PrintWriter pw;
 
 	
 	public EventLogFileParserFirst(Logger logger, String gwId, EventLogIncidents eli) {
@@ -38,6 +38,7 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		this.gwId = gwId;
 		this.eli = eli;
 	}
+	
 	
 	@Override
 	public List<EventLogResult> parseLogFile(InputStream logFileStream, List<String> eventIds, long dayStart) 
@@ -77,6 +78,7 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		return result;
 	}
 	
+	
 	/** List of eventIds known to the parsing provider*/
 	@Override
 	public List<String> supportedEventIds() {
@@ -91,17 +93,20 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		
 	}
 
+	
 	@Override
 	public String id() {
 		return this.getClass().getSimpleName();
 	}
 
+	
 	@Override
 	public String label(OgemaLocale locale) {
 		return "Initial Event Log File parser, e.g. searching for framework restart events";
 	}
 	
-	/**
+	/*
+	 * *
 	 * Check if event is in log file line and perform reporting if so
 	 * 
 	 * @param trim
@@ -115,7 +120,8 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	public boolean checkEvent(String trim, EventLogIncidentType incidentType, boolean doLog, 
 			List<EventLogResult> result, long dayStart) throws IOException {
 			
-		boolean eventFound = checkEvent(trim, incidentType.searchString, incidentType.name, doLog, result, dayStart, incidentType);
+		boolean eventFound = checkEvent(trim, incidentType.searchString, incidentType.name, doLog, 
+				result, dayStart, incidentType);
 		
 		if (eventFound) {
 			String date = new SimpleDateFormat("yyyy-MM-dd'.txt'").format(dayStart);
@@ -126,17 +132,18 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	
 	}
 
-	/** 
-	 * Check if event is in log file line and perform reporting if so
-	 * FIXME update docstring
-	 * TODO cleanup
-	 * @param line
+	
+	
+	/**
+	 * 
+	 * @param line 
 	 * @param searchString string to search for
-	 * @param eventName
+	 * @param eventName name/identifier of the event
 	 * @param doLog
 	 * @param result
 	 * @param dayStart
-	 * @return true if event is found (no checking for other events required), otherwise false
+	 * @param iType
+	 * @return true if an event was found (no further checking for other events required)
 	 * @throws IOException
 	 */
 	public boolean checkEvent(String line, String searchString, String eventName, boolean doLog,  
@@ -153,11 +160,11 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 			    Date parsed = format.parse(timeString);  
 			    elr.eventTime = dayStart + parsed.getTime();
 			} catch (ParseException pe) {
-			    System.out.println("ERROR: Cannot parse \"" + timeString + "\"");
+			    log.debug("ERROR: Cannot parse \"" + timeString + "\"");
 			    return true;
 			}
 		} else {
-			System.out.println(" !!!!!!!! No time string in line:"+line);
+			log.debug(" !!!!!!!! No time string in line:"+line);
 			return true;
 		}
 		
@@ -175,11 +182,9 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		}
  		
  		if(elr.eventMessage != null) {
-			//System.out.println(elr.eventMessage);
+			log.debug(elr.eventMessage);
 			pw.append(elr.eventMessage+"\r\n");
  		}
-
- 		//log.info(gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName);
  		
 		result.add(elr);
 		return true;

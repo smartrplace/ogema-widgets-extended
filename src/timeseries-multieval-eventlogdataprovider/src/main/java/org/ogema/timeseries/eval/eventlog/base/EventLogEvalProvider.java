@@ -41,7 +41,7 @@ import de.iwes.util.timer.AbsoluteTimeHelper;
 import de.iwes.util.timer.AbsoluteTiming;
 
 /**
- * Evaluate basic time series qualities per gateway including gap evaluation
+ * Evaluate basic time series qualities per gateway from logfiles
  */
 @Service(EvaluationProvider.class)
 @Component
@@ -56,8 +56,17 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		
 	/* Provider Information */
     public final static String ID = "basic-eventlog_eval_provider";
-    public final static String LABEL = "Basic EventLog: Startup events";
+    public final static String LABEL = "Basic EventLog: Incident/Error detection";
     public final static String DESCRIPTION = "Basic EventLog: Provides critical event evaluation";
+    
+    /** Additional information about this evaluation. Sent with each message */
+    public final static String MSG_EVAL_INFO = ""
+    		+ "Data Overview: "
+    		+ "https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/eventLogEval.html\r\n"
+    		+ "Data Overview by incident type: "
+    		+ "https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/eventLogEvalIndi.html\r\n"
+    		+ "Evaluation Overview: "
+    		+ "https://www.ogema-source.net/wiki/display/SEMA/Wettbewerb+und+Feldtest+ab+Mitte+2018\r\n";
     
     protected static final Logger logger = LoggerFactory.getLogger(EventLogEvalProvider.class);
     
@@ -71,7 +80,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		/*
 		 * Even though we're not processing any GaRoInputTypes, this function may
 		 * not return an empty array or an IllegalArgumentException will be thrown
-		 * and evaluation aborted.
+		 * and evaluation aborted. FIXME!
 		 */
 		return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback}; 
 	}
@@ -255,7 +264,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		KPIPageDefinition def = new KPIPageDefinition();
 		def.resultIds.add(kpiResults);
 		def.providerId = Arrays.asList(new String[] {ID});
-		def.configName = ID + "_TOTAL_INCIDENT_COUNT";
+		def.configName = ID + ": Total Incident Count";
 		def.urlAlias = "eventLogEval";
 		def.messageProvider = "eventLogMsgProv";
 		result.add(def);
@@ -267,7 +276,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		def = new KPIPageDefinition();
 		def.resultIds.add(incidentResultNamesArr);
 		def.providerId = Arrays.asList(new String[] {ID});
-		def.configName = LABEL + "_INDIVIDUAL_INCIDENT_COUNT";
+		def.configName = ID + " Incident Count Per Type";
 		def.urlAlias = "eventLogEvalIndi";
 		def.defaultIntervalsPerColumnType = 1;
 		result.add(def);
@@ -289,11 +298,10 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 
 				@Override
 				public String getMessage() {
-					String mes = "Time of message creation: "+TimeUtils.getDateAndTimeString(currentTime)+"\r\n"+
-							" Data Overview: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQualityStd.html\r\n"+
-							" Data Overview including Rexometer: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQuality.html\r\n"+
-							" Evaluation Overview: https://www.ogema-source.net/wiki/display/SEMA/Wettbewerb+und+Feldtest+ab+Mitte+2018\r\n"+
-							detectKPIChanges(kpis, currentTime, kpiResults);
+					String mes = "Time of message creation: "
+							+ TimeUtils.getDateAndTimeString(currentTime) + "\r\n"
+							+ detectKPIChanges(kpis, currentTime, kpiResults) + "\r\n\r\n"
+							+ MSG_EVAL_INFO + "\r\n";
 					return mes;
 				}
 				

@@ -13,6 +13,8 @@ import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult
  * A filter lets an element pass by having exec() return true. If an incident has passed the filter,
  * it will be further processed, i. e. counted.
  * 
+ * A filters output can be flipped by setting the respective EventLogIncidentType.reverseFilter to true
+ * 
  * @author jruckel
  *
  */
