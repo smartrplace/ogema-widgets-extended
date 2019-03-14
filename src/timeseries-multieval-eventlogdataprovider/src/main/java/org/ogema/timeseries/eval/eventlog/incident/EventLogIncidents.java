@@ -8,7 +8,7 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
-
+import org.ogema.timeseries.eval.eventlog.incident.IncidentFilter;
 
 
 /**
@@ -29,7 +29,7 @@ public class EventLogIncidents {
 	/**
 	 * Example: timestamp of last incident, thus allowing for a cooldown on incident reporting
 	 */
-	private HashMap<String, Object> flags = new HashMap<>();
+	public HashMap<String, Object> flags = new HashMap<>();
 	
 	public EventLogIncidents() {
 		System.out.println("ELI created.");
@@ -49,6 +49,7 @@ public class EventLogIncidents {
 		public String description;
 		public String searchString;
 		public IncidentFilter filter;
+		public boolean reverseFilter;
 		
 		public IncidentCounter counter = new IncidentCounter();
 		
@@ -64,7 +65,7 @@ public class EventLogIncidents {
 			this.description = description;
 			this.searchString = searchString;
 			this.filter = new IncidentFilter.AllPassFilter();
-			
+			this.reverseFilter = false;
 
 		}
 		
@@ -138,10 +139,10 @@ public class EventLogIncidents {
 		/*
 		 * incidents with filters:
 		 */
-		EventLogIncidentType homematicType = new EventLogIncidentType(
-				"HomematicFehler", "n/a", "discarding write to");
-		homematicType.filter = new IncidentFilter.CooldownFilter(flags, 60000);
-		types.add(homematicType);
+		EventLogIncidentType homematicErr = new EventLogIncidentType(
+				"HOMEMATIC_ERR", "n/a", "discarding write to");
+		homematicErr.filter = new IncidentFilter.CooldownFilter(flags, 60_000);
+		types.add(homematicErr);
 		
 		EventLogIncidentType shutdownDB = new EventLogIncidentType(
 				"SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb");
@@ -150,12 +151,17 @@ public class EventLogIncidents {
 		types.add(shutdownDB);
 		
 		EventLogIncidentType frameworkRestartClean = new EventLogIncidentType(
-				"FrameworkRestartClean", "n/a", "Flushing Data every: ");
+				"FW_RESTART_CLEAN", "n/a", "Flushing Data every: ");
 		/** This filter checks whether the DB was shut down, indicating a clean shutdown */
 		frameworkRestartClean.filter = new IncidentFilter.CheckOccurrenceFlagFilter(flags, "SHUTDOWN_DB");
 		types.add(frameworkRestartClean);
 		
-		// TODO detect unclean Restarts
+		EventLogIncidentType frameworkRestartUnclean = new EventLogIncidentType(
+				"FW_RESTART_UNCLEAN", "n/a", "Flushing Data every: ");
+		/** This filter checks whether the DB was shut down, indicating a clean shutdown */
+		frameworkRestartUnclean.filter = new IncidentFilter.CheckOccurrenceFlagFilter(flags, "SHUTDOWN_DB");
+		frameworkRestartUnclean.reverseFilter = true;
+		types.add(frameworkRestartUnclean);
 	}
 	
 	/**
@@ -168,17 +174,6 @@ public class EventLogIncidents {
 			sum += t.counter.getSum();
 		}
 		return sum;
-	}
-	
-	/**
-	 * Dump some basic stats to console
-	 */
-	@Deprecated
-	public void dumpStats() {
-		System.out.println("Dumping EventLog stats:");
-		for(EventLogIncidentType t : types) {
-			System.out.println(t.name + " has occured a total of " + t.counter.getSum() + " times.");
-		}
 	}
 
 	/**

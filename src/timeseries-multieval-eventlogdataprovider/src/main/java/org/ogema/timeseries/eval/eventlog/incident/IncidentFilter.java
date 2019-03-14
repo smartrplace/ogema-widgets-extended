@@ -18,7 +18,8 @@ import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult
  */
 public interface IncidentFilter {
 	
-	public static final String FLAG_PREFIX_HAS_OCCURRED = "has_occurrred";
+	public static final String FLAG_PREFIX_HAS_OCCURRED = "has_occurrred_";
+	public static final String FLAG_PREFIX_LAST_OCCURRENCE_TIMESTAMP = "last_occurrence_timestamp_";
 	
 	public boolean exec(EventLogResult elr);
 
@@ -58,6 +59,7 @@ public interface IncidentFilter {
 		boolean returnValue;
 		boolean hasOccurred;
 		String eventName = "";
+		String flagKey;
 
 		/**
 		 * 
@@ -80,18 +82,16 @@ public interface IncidentFilter {
 			this.flags = flags;
 			this.returnValue = returnValue;
 			this.hasOccurred = hasOccured;
-			if (! eventName.isEmpty()) {
-				this.eventName = eventName;
-			}
+			this.eventName = eventName;
 		}
 
 		@Override
 		public boolean exec(EventLogResult elr) {
-			if (this.eventName.isEmpty()) {
+			if ("".equals(eventName)) {
 				eventName = elr.eventId;
 			}
-			flags.put(FLAG_PREFIX_HAS_OCCURRED + eventName, hasOccurred);
-			System.out.println("SET FLAG " + FLAG_PREFIX_HAS_OCCURRED + eventName + " to " + hasOccurred);
+			this.flagKey = FLAG_PREFIX_HAS_OCCURRED + eventName;
+			flags.put(flagKey, hasOccurred);
 			return returnValue;
 		}
 	
@@ -107,24 +107,26 @@ public interface IncidentFilter {
 		
 		Map<String, Object> flags;
 		String eventIdToCheck;
+		String flagKey;
 		
 		public CheckOccurrenceFlagFilter(Map<String, Object> flags, String eventIdToCheck) {
 			this.flags = flags;
 			this.eventIdToCheck = eventIdToCheck;
+			this.flagKey= FLAG_PREFIX_HAS_OCCURRED + eventIdToCheck;
 		}
 		
 		@Override
 		public boolean exec(EventLogResult elr) {
 			
-			boolean flagExists = this.flags.containsKey(FLAG_PREFIX_HAS_OCCURRED + eventIdToCheck);
+			if (! this.flags.containsKey(flagKey)) return false;
 			
-			if (flagExists && (boolean) this.flags.get(FLAG_PREFIX_HAS_OCCURRED + eventIdToCheck)) { // FIXME check if flag is boolean insead of casting!
-				this.flags.remove(FLAG_PREFIX_HAS_OCCURRED + eventIdToCheck);
-				System.out.println(FLAG_PREFIX_HAS_OCCURRED + eventIdToCheck + " has previously occurred.");
+			if (! (this.flags.get(flagKey) instanceof Boolean)) return false;
+			
+			if ((boolean)this.flags.get(flagKey)) {
+				this.flags.remove(flagKey);
 				return true;
 			}
 
-			System.out.println(FLAG_PREFIX_HAS_OCCURRED + eventIdToCheck + " has NOT previously occurred.");
 			return false;
 			
 		}
@@ -137,14 +139,14 @@ public interface IncidentFilter {
 	 * @author jruckel
 	 *
 	 */
-	final class CooldownFilter implements IncidentFilter {
+	public class CooldownFilter implements IncidentFilter {
 		
 		Map<String, Object> flags;
 		long minDuration;
 		
 		/**
 		 * 
-		 * @param minDuration minimum duration between two incidents that is to be counted seperately [minutes]
+		 * @param minDuration minimum duration between two incidents that is to be counted seperately [ms]
 		 */
 		public CooldownFilter(Map<String, Object> flags, long minDuration) {
 			this.flags = flags;
@@ -160,24 +162,20 @@ public interface IncidentFilter {
 		
 		/**
 		 * Reporting is on a cooldown
-		 * TODO: make threshold configurable
 		 */
 		@Override
 		public boolean exec(EventLogResult elr) {
 			
-			final String KEY = "last_err_" + elr.eventId;
+			final String KEY = FLAG_PREFIX_LAST_OCCURRENCE_TIMESTAMP + elr.eventId;
 			
 			if (! flags.containsKey(KEY)) {
 				flags.put(KEY, elr.eventTime);
-				System.out.println("Event was counted (cooldown).");
 				return true;
 			}
 			
 			long lastErr = (long) flags.get(KEY);
 			
-			// if less than an hour ago
 			if (elr.eventTime - lastErr < minDuration) {
-				System.out.println("Event was disregarded due to cooldown.");
 				return false;
 			}
 			

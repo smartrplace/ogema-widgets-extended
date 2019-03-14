@@ -27,19 +27,9 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	
 	private EventLogIncidents eli;
 
-	public static final String RESTART_EVENT = "FrameworkRestart";
-	public static final String UPDSERVER_NOCON_EVENT = "UpdateServerNoConnection";
-	public static final String HOMEMATIC = "HomematicFehler";
-	public static final String TRANSFER_FAIL_HOMEMATIC = "NoHomematicData";
-	public static final String OLD_BUNDLE = "inactiveBundle";
-	public static final String SHUTDOWN_DB = "device itself shutdowned and restarted";
-//	public static final String STOP_CHANNEL_MAN = "device itself but not shutdowned before";
-//	public static final String CONNECTION_FAILED_FWRESTART = "device itself but not shutdowned before";//"ServerConnector stopped"; 
-//	public static final String BUNDLEAPP_INIT = "device itself but not shutdowned before";//"RemoteConnector stopped"; 
 	protected final Logger log;
 	protected final String gwId;
-	private long prevDt;
-	private String shutdown = null;
+
 	private PrintWriter pw ;
 
 	
@@ -171,29 +161,25 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 			return true;
 		}
 		
-		
+		elr.eventId = eventName;
+		elr.fullEventString = line;
+		elr.gatewayId = gwId;
+		elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
+ 		
+ 		
 		/**
 		 * @return false if the filter has determined not to count the incident
 		 */
-		if (! iType.filter.exec(elr)) {
+		if (! iType.filter.exec(elr) ^ iType.reverseFilter) {
 			return false;
 		}
-		
-		elr.eventId = eventName;
-		//elr.eventTime = getTimeFromLogLine(line);
-		elr.fullEventString = line;
-
-
- 		elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
-
- 		elr.gatewayId = gwId;
  		
  		if(elr.eventMessage != null) {
-			System.out.println(elr.eventMessage);
+			//System.out.println(elr.eventMessage);
 			pw.append(elr.eventMessage+"\r\n");
  		}
 
- 		log.info(gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName);
+ 		//log.info(gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName);
  		
 		result.add(elr);
 		return true;
