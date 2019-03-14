@@ -51,6 +51,9 @@ public class EventLogIncidents {
 		public IncidentFilter filter;
 		public boolean reverseFilter;
 		
+		/** Whether or not do display the type on the KPI page */
+		public boolean display;
+		
 		public IncidentCounter counter = new IncidentCounter();
 		
 		/**
@@ -66,6 +69,7 @@ public class EventLogIncidents {
 			this.searchString = searchString;
 			this.filter = new IncidentFilter.AllPassFilter();
 			this.reverseFilter = false;
+			this.display = true;
 
 		}
 		
@@ -113,6 +117,13 @@ public class EventLogIncidents {
 	public List<EventLogIncidentType> getTypes() {
 		return types;
 	}
+	
+	public EventLogIncidentType getTypeByName(String name) {
+		for(EventLogIncidentType t : types) {
+			if (t.name.equals(name)) return t;
+		}
+		return new EventLogIncidentType("NULL", "n/a", "");
+	}
 
 	/**
 	 * Add an incident type
@@ -148,6 +159,7 @@ public class EventLogIncidents {
 				"SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb");
 		/** This filter sets a flag to indicate a DB shutdown, but does not count the incident itself */
 		shutdownDB.filter = new IncidentFilter.OccurrenceFlagFilter(flags, false);
+		shutdownDB.display = false; // since this is only a "helper incident", no need to display on KPI page
 		types.add(shutdownDB);
 		
 		EventLogIncidentType frameworkRestartClean = new EventLogIncidentType(
@@ -247,7 +259,6 @@ public class EventLogIncidents {
 			fw.append(line);
 			fw.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}

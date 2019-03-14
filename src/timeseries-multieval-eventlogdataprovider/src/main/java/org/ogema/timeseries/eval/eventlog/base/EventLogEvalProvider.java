@@ -16,6 +16,7 @@ import org.ogema.core.model.simple.FloatResource;
 import org.ogema.core.model.simple.IntegerResource;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
 import org.ogema.timeseries.eval.eventlog.incident.EventLogIncidents;
+import org.ogema.timeseries.eval.eventlog.incident.EventLogIncidents.EventLogIncidentType;
 import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
@@ -192,16 +193,53 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			return new SingleValueResultImpl<Float>(rt, cec.incidentsPerDay, inputData);
 		}
     };
- 
+    
+    /** In this list, a KPI for each of the configured incident types is held */
+    private List<GenericGaRoResultType> incidentResults = new ArrayList<GenericGaRoResultType>();
+	private List<String> incidentResultNamesToDisplay = new ArrayList<String>();
+	private boolean incidentResultsFilled = false; // Ensure that result types are only added once
+    
+    public void addIncidentResults() {
+    	
+    	if (incidentResultsFilled) return;
+    	
+    	// Since we don't have access to an EvalCore yet, we're creating a new ELI to get the list of types
+    	List<EventLogIncidentType> types = new EventLogIncidents().getTypes();
+    	
+    	for( EventLogIncidentType t : types ) {
+    		GenericGaRoResultType res = new  GenericGaRoResultType(t.name,
+    	    		t.description, IntegerResource.class, null) {
+    			@Override
+    			public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
+    					List<TimeSeriesData> inputData) {
+    				EvalCore cec = ((EvalCore)ec);
+    				EventLogIncidentType iType = cec.eli.getTypeByName(t.name);
+    				int incidentCount = iType.counter.getSum();
+    				
+    				return new SingleValueResultImpl<Integer>(rt, incidentCount, inputData);
+    			}
+    	    };
+    	    incidentResults.add(res);
+    	    if (t.display) incidentResultNamesToDisplay.add(t.name);
+    	}
+    	
+    	incidentResultsFilled = true;
+
+    }
+    
     private static final List<GenericGaRoResultType> RESULTS = Arrays.asList(
 //   		BOXSTART_NUM, 
     		INCIDENT_COUNT,
     		INCIDENTS_PER_DAY
     		);
     
+    
 	@Override
 	protected List<GenericGaRoResultType> resultTypesGaRo() {
-		return RESULTS;
+		addIncidentResults();
+		List<GenericGaRoResultType> allResults = new ArrayList<GenericGaRoResultType>(RESULTS);
+		allResults.addAll(incidentResults);
+		return allResults;
 	}
 	
 	public final static String[] kpiResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY"};	
@@ -217,13 +255,23 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		KPIPageDefinition def = new KPIPageDefinition();
 		def.resultIds.add(kpiResults);
 		def.providerId = Arrays.asList(new String[] {ID});
-		def.configName = LABEL;
+		def.configName = ID + "_TOTAL_INCIDENT_COUNT";
 		def.urlAlias = "eventLogEval";
 		def.messageProvider = "eventLogMsgProv";
-		//def.specialIntervalsPerColumn.put("DURATION_HOURS", 1);
-		//def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
-		
 		result.add(def);
+		
+		addIncidentResults();
+		String[] incidentResultNamesArr = new String[incidentResultNamesToDisplay.size()];
+		incidentResultNamesArr = incidentResultNamesToDisplay.toArray(incidentResultNamesArr);
+		
+		def = new KPIPageDefinition();
+		def.resultIds.add(incidentResultNamesArr);
+		def.providerId = Arrays.asList(new String[] {ID});
+		def.configName = LABEL + "_INDIVIDUAL_INCIDENT_COUNT";
+		def.urlAlias = "eventLogEvalIndi";
+		def.defaultIntervalsPerColumnType = 1;
+		result.add(def);
+		
 		return result;
 	}
 
