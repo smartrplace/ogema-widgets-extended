@@ -92,6 +92,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 
     public class EvalCore extends GenericGaRoEvaluationCore {
     	
+    	
     	EventLogIncidents eli = new EventLogIncidents();
     	
 		EventLogFileParserFirst fileParser = new EventLogFileParserFirst(logger, currentGwId, eli);
@@ -115,6 +116,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time,
     			int size, int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
      		
+    		logger.info("Starting new Eventlog EvalCore");
     		
 			eli.writeCSVHeader();
     		
@@ -232,6 +234,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     	    if (t.display) incidentResultNamesToDisplay.add(t.name);
     	}
     	
+    	incidentResultNamesToDisplay.add("timeOfCalculation");
     	incidentResultsFilled = true;
 
     }
@@ -251,7 +254,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		return allResults;
 	}
 	
-	public final static String[] kpiResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY"};	
+	public final static String[] kpiResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY", "timeOfCalculation"};	
 	
 	/**
 	 * KPI Page(s)
@@ -267,6 +270,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		def.configName = ID + ": Total Incident Count";
 		def.urlAlias = "eventLogEval";
 		def.messageProvider = "eventLogMsgProv";
+		def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
 		result.add(def);
 		
 		addIncidentResults();
@@ -279,6 +283,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		def.configName = ID + " Incident Count Per Type";
 		def.urlAlias = "eventLogEvalIndi";
 		def.defaultIntervalsPerColumnType = 1;
+		def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
 		result.add(def);
 		
 		return result;
