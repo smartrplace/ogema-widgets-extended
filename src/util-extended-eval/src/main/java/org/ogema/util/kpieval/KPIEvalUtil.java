@@ -1,6 +1,7 @@
-package org.ogema.util.kpieval; // TODO: Move to org.ogema.timeseries.eval.eventlog.util
+package org.ogema.util.kpieval;
 
 import java.util.Collection;
+import java.util.Collections;
 import java.util.List;
 
 import org.apache.commons.lang3.StringUtils;
@@ -17,6 +18,12 @@ import de.iwes.util.timer.AbsoluteTiming;
 public class KPIEvalUtil {
 	
 	public static final int COLUMN_WIDTH = 15;
+
+	/** Use some default values if no threshold / no idsToCheckAlways are given */
+	public static String detectKPIChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime,
+			String[] resultIds) {
+		return detectKPIChanges(kpis, currentTime, resultIds, 0.75f, 1.5f, Collections.emptyList());
+	}
 	
 	/** Report KPI columns that either dropped significantly or were increased significantly compared
 	 * to the day before the current day evaluated.
