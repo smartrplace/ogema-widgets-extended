@@ -205,6 +205,16 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		}
     };
     
+    public final static GenericGaRoResultType LINES_PARSED = new GenericGaRoResultType("LINES_PARSED",
+    		"Number of logfile lines parsed", IntegerResource.class, null) {
+		@Override
+		public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
+				List<TimeSeriesData> inputData) {
+			EvalCore cec = ((EvalCore)ec);
+			return new SingleValueResultImpl<Integer>(rt, cec.eli.linesParsedCount, inputData);
+		}
+    };
+    
     /** In this list, a KPI for each of the configured incident types is held */
     private List<GenericGaRoResultType> incidentResults = new ArrayList<GenericGaRoResultType>();
 	private List<String> incidentResultNamesToDisplay = new ArrayList<String>();
@@ -242,7 +252,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     private static final List<GenericGaRoResultType> RESULTS = Arrays.asList(
 //   		BOXSTART_NUM, 
     		INCIDENT_COUNT,
-    		INCIDENTS_PER_DAY
+    		INCIDENTS_PER_DAY,
+    		LINES_PARSED
     		);
     
     
@@ -254,7 +265,12 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		return allResults;
 	}
 	
-	public final static String[] kpiResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY", "timeOfCalculation"};	
+	public final static String[] kpiResults = new String[]{
+			"INCIDENT_COUNT",
+			"INCIDENTS_PER_DAY", 
+			"LINES_PARSED",
+			"timeOfCalculation"
+			};	
 	
 	/**
 	 * KPI Page(s)

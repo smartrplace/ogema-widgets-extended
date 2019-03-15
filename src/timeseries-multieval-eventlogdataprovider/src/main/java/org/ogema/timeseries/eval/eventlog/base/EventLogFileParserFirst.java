@@ -59,6 +59,9 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 			String line = br.readLine();
 			if(line == null) break;
 			try {
+				
+				eli.linesParsedCount += 1;
+				
 				String trim = line.trim();
 				if(trim.startsWith("#")) continue;
 				if(trim.isEmpty()) continue;

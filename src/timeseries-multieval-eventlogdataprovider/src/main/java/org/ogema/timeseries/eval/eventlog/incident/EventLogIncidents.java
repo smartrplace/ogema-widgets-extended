@@ -27,6 +27,7 @@ public class EventLogIncidents {
 	private List<EventLogIncidentType> types = new ArrayList<EventLogIncidentType>();
 	
 	private FileWriter fw;
+	public int linesParsedCount = 0;
 	
 	/**
 	 * Example: timestamp of last incident, thus allowing for a cooldown on incident reporting
