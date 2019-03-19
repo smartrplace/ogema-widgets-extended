@@ -17,6 +17,7 @@ package org.ogema.util.evalcontrol;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Map;
 import java.util.Set;
 
 import org.ogema.core.model.Resource;
@@ -341,4 +342,10 @@ public interface EvalScheduler {
 	 * @param exportDescriptor if true the export is activated
 	 */
 	public void setDescriptorExportMode(boolean exportDescriptor);
+	
+	/**
+	 * Get the providerIds and times of scheduled auto evaluation timers.
+	 * @return providerId -> time (ms since epoch)
+	 */
+	public Map<String, Long> getNextExecutionTimes();
 }

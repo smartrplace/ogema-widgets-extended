@@ -993,4 +993,16 @@ public class EvalSchedulerImpl implements EvalScheduler {
 	public void setStandardDataProvidersToUse(List<GaRoMultiEvalDataProvider<?>> dataProvidersToUse) {
 		this.dataProvidersToUse = dataProvidersToUse;
 	}
+	
+	@Override
+	public Map<String, Long> getNextExecutionTimes() {
+		Map<String, Long> execTimes = new HashMap<String, Long>();
+		
+		nextAutoSchedulingTime.forEach( (eventId, timer) -> {
+			execTimes.put(eventId, timer.getExecutionTime());
+		});
+		
+		return execTimes;
+	}
+	
 }
