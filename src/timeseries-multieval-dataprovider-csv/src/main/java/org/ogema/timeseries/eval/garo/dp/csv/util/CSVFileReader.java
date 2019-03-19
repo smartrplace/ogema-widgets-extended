@@ -68,6 +68,7 @@ public class CSVFileReader {
 		    }
 		});
 	 
+	    if(files == null) return false;
 	    Arrays.sort(files);
 	    for (final File fileEntry : files) {
 	    	readSingleFile(fileEntry.toPath());

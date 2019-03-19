@@ -9,8 +9,6 @@ import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
-import org.apache.felix.scr.annotations.Component;
-import org.apache.felix.scr.annotations.Service;
 import org.ogema.core.channelmanager.measurements.SampledValue;
 import org.ogema.core.model.simple.FloatResource;
 import org.ogema.core.model.simple.IntegerResource;
@@ -20,6 +18,7 @@ import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
 import org.ogema.util.kpieval.KPIEvalUtil;
+import org.osgi.service.component.annotations.Component;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -42,8 +41,7 @@ import de.iwes.util.timer.AbsoluteTiming;
 /**
  * Evaluate basic time series qualities per gateway including gap evaluation
  */
-@Service(EvaluationProvider.class)
-@Component
+@Component(service = EvaluationProvider.class)
 public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	
 	private final String basePathStr = System.getProperty("org.smartrplace.analysis.backup.parser.basepath");
@@ -72,7 +70,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		 * not return an empty array or an IllegalArgumentException will be thrown
 		 * and evaluation aborted.
 		 */
-		return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback}; 
+		return new GaRoDataType[] {GaRoDataType.OncePerGateway}; 
+		//return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback}; 
 	}
  	
     @Override

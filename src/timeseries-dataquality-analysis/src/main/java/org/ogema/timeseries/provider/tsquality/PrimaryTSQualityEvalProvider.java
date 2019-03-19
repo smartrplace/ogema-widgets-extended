@@ -18,13 +18,11 @@ package org.ogema.timeseries.provider.tsquality;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
-import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Map.Entry;
 
-import org.apache.commons.lang3.StringUtils;
 import org.apache.felix.scr.annotations.Component;
 import org.apache.felix.scr.annotations.Service;
 import org.ogema.core.channelmanager.measurements.SampledValue;
@@ -32,7 +30,6 @@ import org.ogema.core.model.simple.FloatResource;
 import org.ogema.core.model.simple.IntegerResource;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
-import org.ogema.util.directresourcegui.kpi.KPIMonitoringReport;
 import org.ogema.util.kpieval.KPIEvalUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -48,12 +45,9 @@ import de.iwes.timeseries.eval.api.TimeSeriesData;
 import de.iwes.timeseries.eval.api.configuration.ConfigurationInstance;
 import de.iwes.timeseries.eval.base.provider.utils.SingleValueResultImpl;
 import de.iwes.timeseries.eval.garo.api.base.GaRoDataType;
-import de.iwes.timeseries.eval.garo.api.base.GaRoDataTypeI;
-import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider;
 import de.iwes.timeseries.eval.garo.multibase.KPIStatisticsManagementI;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoEvaluationCore;
 import de.iwes.timeseries.eval.garo.multibase.generic.GenericGaRoResultType;
-import de.iwes.util.timer.AbsoluteTiming;
 import de.iwes.widgets.api.messaging.MessagePriority;
 
 /**

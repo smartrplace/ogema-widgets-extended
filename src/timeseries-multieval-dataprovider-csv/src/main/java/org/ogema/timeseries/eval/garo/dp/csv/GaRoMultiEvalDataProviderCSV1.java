@@ -16,13 +16,14 @@
 
 package org.ogema.timeseries.eval.garo.dp.csv;
 
-import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
+import java.util.Map.Entry;
 
 import org.ogema.core.timeseries.InterpolationMode;
 import org.ogema.timeseries.eval.garo.dp.csv.util.CSVFileReader;
@@ -40,11 +41,8 @@ import de.iwes.timeseries.eval.garo.api.base.GaRoMultiEvalDataProvider;
 import de.iwes.timeseries.eval.garo.api.base.GaRoMultiEvaluationInput;
 import de.iwes.timeseries.eval.garo.api.base.GaRoSelectionItem;
 import de.iwes.timeseries.eval.garo.api.helper.base.GaRoEvalHelper;
-import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIPageDefinition;
 import de.iwes.util.resource.ResourceHelper.DeviceInfo;
 import de.iwes.widgets.api.widgets.localisation.OgemaLocale;
-import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
-import de.iwes.widgets.html.form.button.Button;
 import de.iwes.widgets.html.selectiontree.SelectionItem;
 
 
@@ -67,7 +65,7 @@ public class GaRoMultiEvalDataProviderCSV1 extends GaRoMultiEvalDataProvider<GaR
 	public static final String SINGLE_GATEWAY_ID_PROPERTY = "org.ogema.timeseries.eval.garo.dp.csv1.gatewayid";
 	public static final List<String> gwIds = Arrays.asList(new String[] {System.getProperty(SINGLE_GATEWAY_ID_PROPERTY)});
 	/** Directory where DataProvider searches for CSV files*/
-	public static final Path csvFileDirectory = Paths.get("./csvtimeseries");
+	public static final Path csvFileDirectory = Paths.get("../csvtimeseries");
 	public static final SimpleDateFormat dateTimeFormat = new SimpleDateFormat("dd.MM.yyyy HH:mm");
 	
 	private List<SelectionItem> gwSelectionItems = null;
@@ -114,12 +112,14 @@ public class GaRoMultiEvalDataProviderCSV1 extends GaRoMultiEvalDataProvider<GaR
 			for(String roomId: tsDataAll.roomData.keySet()) {
 				result.add(new GaRoSelectionItemCSV1(roomId, superItem));
 			}
+			result.add(new GaRoSelectionItemCSV1(GaRoMultiEvalDataProvider.BUILDING_OVERALL_ROOM_ID, superItem));
 			return result;
 		case GaRoMultiEvalDataProvider.TS_LEVEL:
-			List<String> recIds = superItem.getDevicePaths();
+			Map<String, String> recIds = superItem.getDevicePathsInternal();
 			result = new ArrayList<>();
-			for(String tsId: recIds) {
-				result.add(new GaRoSelectionItemCSV1(tsId, superItem.id(), superItem));
+			for(Entry<String, String> tsId: recIds.entrySet()) {
+				result.add(new GaRoSelectionItemCSV1(tsId.getKey(), superItem.id(), superItem,
+						tsId.getValue()));
 			}				
 			return result;
 		default:
