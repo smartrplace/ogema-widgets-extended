@@ -16,6 +16,7 @@
 
 package org.ogema.timeseries.eval.garo.dp.csv;
 
+import java.io.File;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.text.SimpleDateFormat;
@@ -39,9 +40,13 @@ import de.iwes.timeseries.eval.garo.api.base.GaRoMultiEvalDataProvider;
 import de.iwes.timeseries.eval.garo.api.base.GaRoMultiEvaluationInput;
 import de.iwes.timeseries.eval.garo.api.base.GaRoSelectionItem;
 import de.iwes.timeseries.eval.garo.api.helper.base.GaRoEvalHelper;
+import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider.KPIPageDefinition;
 import de.iwes.util.resource.ResourceHelper.DeviceInfo;
 import de.iwes.widgets.api.widgets.localisation.OgemaLocale;
+import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
+import de.iwes.widgets.html.form.button.Button;
 import de.iwes.widgets.html.selectiontree.SelectionItem;
+
 
 /** This is a very simple data provider just providing data for a single gateway. If a timeseries shall
  * 	apply to a certain room the file name must have the format $Room$<roomId>.<timeSeriesId>.<subId>.csv .
@@ -99,10 +104,12 @@ public class GaRoMultiEvalDataProviderCSV1 extends GaRoMultiEvalDataProvider<GaR
 			if(gwSelectionItems == null) {
 				gwSelectionItems = new ArrayList<>();
 				for(String gw: gwIds) gwSelectionItems.add(new GaRoSelectionItemCSV1(gw, fileReader));
+				
 			}
 			return gwSelectionItems;
 		case GaRoMultiEvalDataProvider.ROOM_LEVEL:
 			List<SelectionItem> result = new ArrayList<>();
+			fileReader.getData(true);
 			for(String roomId: tsDataAll.roomData.keySet()) {
 				result.add(new GaRoSelectionItemCSV1(roomId, superItem));
 			}
@@ -160,6 +167,7 @@ public class GaRoMultiEvalDataProviderCSV1 extends GaRoMultiEvalDataProvider<GaR
 		}
 		return new EvaluationInputImplGaRo(tsList, devList);
 	}
+	
 	
 	public GaRoMultiEvaluationInput provideMultiEvaluationInput(DataProviderType type, DataProvider<?> dataProvider,
 			GaRoDataTypeI terminalDataType, List<String> topLevelIdsToEvaluate, String topLevelOptionId) {

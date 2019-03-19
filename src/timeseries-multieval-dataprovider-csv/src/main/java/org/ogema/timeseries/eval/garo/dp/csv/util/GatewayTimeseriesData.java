@@ -25,6 +25,7 @@ import de.iwes.timeseries.eval.garo.api.base.GaRoMultiEvalDataProvider;
 
 public class GatewayTimeseriesData {
 	public String gwId;
+	//roomId -> time series for the room
 	public Map<String, RoomTimeseriesData> roomData = new HashMap<>();
 	
 	public boolean addTimeSeries(String roomId, String tsId, ReadOnlyTimeSeries ts) {
@@ -35,7 +36,7 @@ public class GatewayTimeseriesData {
 		if(rdd == null) {
 			rdd = new RoomTimeseriesData();
 			rdd.roomId = roomId;
-			roomData.put(gwId, rdd);
+			roomData.put(roomId, rdd);
 			result = true;
 		}
 		rdd.addTimeseriesData(tsId, ts);
