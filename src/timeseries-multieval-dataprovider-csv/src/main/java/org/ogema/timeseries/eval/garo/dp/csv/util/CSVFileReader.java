@@ -27,6 +27,8 @@ import org.ogema.timeseries.eval.garo.dp.csv.GaRoMultiEvalDataProviderCSV1;
 import org.ogema.tools.timeseriesimport.api.ImportConfiguration;
 import org.ogema.tools.timeseriesimport.api.TimeseriesImport;
 
+import de.iwes.timeseries.eval.garo.api.base.GaRoMultiEvalDataProvider;
+
 public class CSVFileReader {
 	protected final Path sourceDir;
 	protected final GatewayTimeseriesData destination;
@@ -44,6 +46,10 @@ public class CSVFileReader {
 	}
 
 	public GatewayTimeseriesData getData() {
+		return getData(false);
+	}
+	public GatewayTimeseriesData getData(boolean forceUpdate) {
+		readData(forceUpdate);
 		return destination;
 	}
 	
@@ -58,7 +64,7 @@ public class CSVFileReader {
 		}
 	    File[] files = sourceDir.toFile().listFiles(new FilenameFilter() {
 		    public boolean accept(File dir, String name) {
-		        return !name.toLowerCase().endsWith(".csv");
+		        return name.toLowerCase().endsWith(".csv");
 		    }
 		});
 	 
@@ -74,15 +80,16 @@ public class CSVFileReader {
 	public void readSingleFile(Path source) {
 		String fileName = source.getFileName().toString();
 		if(!fileName.endsWith(".csv")) return;
-		String roomId = null;
+		final String roomId;
 		if(fileName.startsWith(GaRoMultiEvalDataProviderCSV1.ROOM_IDENT_STRING)) {
-			String[] els = fileName.split(".", 2);
+			String[] els = fileName.split("\\.", 2);
 			if(els.length != 2) {
 				throw new IllegalStateException("Filename "+source+" does not delimit room from timeseries id!");
 			}
-			roomId = els[0];
-			fileName = els[1].substring(1);
-		}
+			roomId = els[0].substring(GaRoMultiEvalDataProviderCSV1.ROOM_IDENT_STRING.length());
+			fileName = els[1];
+		} else
+			roomId = GaRoMultiEvalDataProvider.BUILDING_OVERALL_ROOM_ID;
 		String tsId;
 		fileName = fileName.substring(0, fileName.length()-4);
 		int dotIdx = fileName.indexOf(".");

@@ -3,9 +3,13 @@ package com.iee.app.evaluationofflinecontrol;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Paths;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.Arrays;
 import java.util.Dictionary;
 import java.util.Hashtable;
+import java.util.Map;
+import java.util.TimeZone;
 import java.util.concurrent.ForkJoinPool;
 
 import org.apache.felix.service.command.Descriptor;
@@ -31,7 +35,10 @@ class ShellCommandsEOC {
 		this.app = app; 
 		final Dictionary<String, Object> props = new Hashtable<>();
     	props.put("osgi.command.scope", "evaloff");
-		props.put("osgi.command.function", new String[] {"createSlotsZip"});
+    	props.put("osgi.command.function", new String[] {
+    			"createSlotsZip",
+    			"listAutoEvalConfigs"
+    			});
 		this.ownService = ctx.registerService(ShellCommandsEOC.class, this, props);
 
 	}
@@ -60,4 +67,18 @@ class ShellCommandsEOC {
 		RemoteSlotsDBBackupButton.performSlotsBackup(Paths.get("./data/"), Paths.get("./data/backupzip/remoteSlots"+StringFormatHelper.getDateForPath(now)+".zip"),
 				startTime, endTime, Arrays.asList(new String[] {""}), new File(OfflineEvaluationControlController.generalBackupSource), true);
     }
+	
+	@Descriptor("List all currently scheduled auto evaluations, including the planned time of execution")
+	public void listAutoEvalConfigs() {
+		Map<String, Long> execTimes = app.serviceAccess.evalResultMan().getEvalScheduler().getNextExecutionTimes();
+		System.out.println(execTimes.size() + " evaluation providers are scheduled to run:");
+		
+		TimeZone tz = TimeZone.getTimeZone("UTC"); // avoid any time zone ambiguity
+		DateFormat df = new SimpleDateFormat("yyy-MM-dd'T'HH:mm'Z'");
+		df.setTimeZone(tz);
+		
+		execTimes.forEach( (providerId, time) -> {
+			System.out.println(providerId + " is scheduled to run at " + df.format(time) + " (" + time + ")");
+		} );
+	}
 }

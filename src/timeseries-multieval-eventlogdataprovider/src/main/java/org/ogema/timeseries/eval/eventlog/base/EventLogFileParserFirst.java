@@ -10,20 +10,21 @@ import java.io.PrintWriter;
 import java.text.ParseException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Date;
 import java.util.List;
 import java.util.TimeZone;
 
+import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents.EventLogIncidentType;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.slf4j.Logger;
 
-import de.iwes.util.timer.AbsoluteTimeHelper;
-import de.iwes.util.timer.AbsoluteTiming;
 import de.iwes.widgets.api.widgets.localisation.OgemaLocale;
 
+
 public class EventLogFileParserFirst implements EventLogFileParser {
+	
+	private EventLogIncidents eli;
 
 	public static final String RESTART_EVENT = "FrameworkRestart";
 	public static final String UPDSERVER_NOCON_EVENT = "UpdateServerNoConnection";
@@ -41,13 +42,17 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	private PrintWriter pw ;
 
 	
-	public EventLogFileParserFirst(Logger logger, String gwId) {
+	public EventLogFileParserFirst(Logger logger, String gwId, EventLogIncidents eli) {
 		this.log = logger;
 		this.gwId = gwId;
+		this.eli = eli;
 	}
 	
 	@Override
-	public List<EventLogResult> parseLogFile(InputStream logFileStream, List<String> eventIds, long dayStart) throws IOException{
+	public List<EventLogResult> parseLogFile(InputStream logFileStream, List<String> eventIds, long dayStart) 
+			throws IOException {
+		
+		List<EventLogIncidentType> incidentTypes = eli.getTypes();
 		List<EventLogResult> result = new ArrayList<>();
 		BufferedReader br = new BufferedReader(new InputStreamReader(logFileStream));
 
@@ -65,27 +70,34 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 				String trim = line.trim();
 				if(trim.startsWith("#")) continue;
 				if(trim.isEmpty()) continue;
+				for (EventLogIncidentType i : incidentTypes) {
+					if (checkEvent(trim, i, true, result, dayStart)) break;
+				}
 
-				if(checkEvent(trim, "Flushing Data every: ", RESTART_EVENT, true, result, dayStart)) continue;
-				if(checkEvent(trim, "Error connecting to update server", UPDSERVER_NOCON_EVENT, true, result, dayStart)) continue;
-				if(checkEvent(trim, "discarding write to", HOMEMATIC, true, result, dayStart)) continue;
-				if(checkEvent(trim, "PING failed", TRANSFER_FAIL_HOMEMATIC, true, result, dayStart)) continue;
-				if(checkEvent(trim, "Inactive bundle found", OLD_BUNDLE, true, result, dayStart)) continue;
-				checkEvent(trim, "Closing FendoDB data/slotsdb", SHUTDOWN_DB, true, result, dayStart);
-				
-			} catch(Exception e) {
+			}
+			catch(Exception e) {
 				e.printStackTrace();
 			}
 		}
+		
 		br.close();
 		pw.close();
+			
 		return result;
 	}
 	
 	/** List of eventIds known to the parsing provider*/
 	@Override
 	public List<String> supportedEventIds() {
-		return Arrays.asList(new String[] {RESTART_EVENT, UPDSERVER_NOCON_EVENT, HOMEMATIC,TRANSFER_FAIL_HOMEMATIC});
+
+		List<String> supported = new ArrayList<String>();
+		
+		eli.getTypes().forEach(t -> {
+			supported.add(t.name);
+		});
+		
+		return supported;
+		
 	}
 
 	@Override
@@ -97,27 +109,54 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	public String label(OgemaLocale locale) {
 		return "Initial Event Log File parser, e.g. searching for framework restart events";
 	}
-
-	/** Check if event is in log file line and perform reporting if so
+	
+	/**
+	 * Check if event is in log file line and perform reporting if so
 	 * 
 	 * @param trim
-	 * @param eventText
-	 * @param eventId
+	 * @param incidentType
+	 * @param doLog
+	 * @param result
+	 * @param dayStart
+	 * @return
+	 * @throws IOException
+	 */
+	public boolean checkEvent(String trim, EventLogIncidentType incidentType, boolean doLog, 
+			List<EventLogResult> result, long dayStart) throws IOException {
+			
+		boolean eventFound = checkEvent(trim, incidentType.searchString, incidentType.name, doLog, result, dayStart);
+		
+		if (eventFound) {
+			String date = new SimpleDateFormat("yyyy-MM-dd'.txt'").format(dayStart);
+			incidentType.counter.increment(date);
+		}
+		
+		return eventFound;
+	
+	}
+
+	/** 
+	 * Check if event is in log file line and perform reporting if so
+	 * 
+	 * @param line
+	 * @param searchString string to search for
+	 * @param eventName
 	 * @param doLog
 	 * @param result
 	 * @param dayStart
 	 * @return true if event is found (no checking for other events required), otherwise false
 	 * @throws IOException
 	 */
-	public boolean checkEvent(String trim, String eventText, String eventId, boolean doLog,  
+	public boolean checkEvent(String line, String searchString, String eventName, boolean doLog,  
 			List<EventLogResult> result, long dayStart) throws IOException {
-		if(!trim.contains(eventText)) return false;
+		
+		if(!line.contains(searchString)) return false;
 		
 		EventLogResult elr = new EventLogResult();
-		if(trim.length() > 12) {
+		if(line.length() > 12) {
 			SimpleDateFormat format = new SimpleDateFormat("HH:mm:ss.SSS");
 			format.setTimeZone(TimeZone.getTimeZone("UTC"));
-			String timeString = trim.substring(0, 12);
+			String timeString = line.substring(0, 12);
 			try {
 			    Date parsed = format.parse(timeString);  
 			    elr.eventTime = dayStart + parsed.getTime();
@@ -126,35 +165,35 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 			    return true;
 			}
 		} else {
-			System.out.println(" !!!!!!!! No time string in line:"+trim);
+			System.out.println(" !!!!!!!! No time string in line:"+line);
 			return true;
 		}
-		elr.eventId = eventId;
+		elr.eventId = eventName;
 		//elr.eventTime = getTimeFromLogLine(line);
-		elr.fullEventString = trim;
+		elr.fullEventString = line;
 
- 		switch (eventId) {
+ 		switch (eventName) {
  		
  		case HOMEMATIC:
 // 			long startOfHour = AbsoluteTimeHelper.getIntervalStart(elr.eventTime, AbsoluteTiming.HOUR);
  			if(elr.eventTime - prevDt < EventLogEvalProvider.HOUR_MILLIS) return true;
  			else {
  				prevDt = elr.eventTime; 
- 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventId;
+ 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
  			}
 		 	break;
  		case RESTART_EVENT:											
  			if (shutdown==null)
- 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventId + " - "+"possibly device removed by user or itself restarted without shutdown";
+ 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName + " - "+"possibly device removed by user or itself restarted without shutdown";
  			else 
- 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventId +" - "+shutdown;
+ 				elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName +" - "+shutdown;
  				shutdown = null;
 		   	break;
  		case SHUTDOWN_DB:
- 			shutdown = eventId;
+ 			shutdown = eventName;
  			break;
  		default:
- 			elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventId;
+ 			elr.eventMessage = gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName;
 			break;
  		}
  		elr.gatewayId = gwId;
@@ -164,9 +203,12 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 			pw.append(elr.eventMessage+"\r\n");
  		}
  		
- 		if(eventId != SHUTDOWN_DB) {
- 			log.info(gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventId);
+ 		if(eventName != SHUTDOWN_DB) {
+ 			log.info(gwId+"#"+TimeUtils.getDateAndTimeString(elr.eventTime)+" : "+eventName);
  		}
+ 		
+ 		
+ 		
 		result.add(elr);
 		return true;
  	}
