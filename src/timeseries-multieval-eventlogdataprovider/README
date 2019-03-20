@@ -1,0 +1,7 @@
+-----------------------------------------
+timeseries-multieval-eventlogdataprovider
+-----------------------------------------
+
+This provider automates analysis of gateway log files.
+
+More documentation is available on the OGEMA Wiki: https://community.ogema-source.net/xwiki/bin/view/Tutorial%20Collection/SDK%20Tutorial%20Overview%20Experimental/The%20OGEMA%20Evaluation%20framework/Evaluate%20Logging/

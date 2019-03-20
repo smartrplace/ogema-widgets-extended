@@ -13,8 +13,9 @@ import org.ogema.core.channelmanager.measurements.SampledValue;
 import org.ogema.core.model.simple.FloatResource;
 import org.ogema.core.model.simple.IntegerResource;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
+import org.ogema.timeseries.eval.eventlog.incident.EventLogIncidents;
+import org.ogema.timeseries.eval.eventlog.incident.EventLogIncidents.EventLogIncidentType;
 import org.ogema.timeseries.eval.eventlog.util.EventLogParserUtil;
-import org.ogema.timeseries.eval.eventlog.base.EventLogIncidents;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.timeseries.iterator.api.SampledValueDataPoint;
 import org.ogema.util.kpieval.KPIEvalUtil;
@@ -39,7 +40,7 @@ import de.iwes.util.timer.AbsoluteTimeHelper;
 import de.iwes.util.timer.AbsoluteTiming;
 
 /**
- * Evaluate basic time series qualities per gateway including gap evaluation
+ * Evaluate basic time series qualities per gateway from logfiles
  */
 @Component(service = EvaluationProvider.class)
 public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
@@ -53,8 +54,17 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		
 	/* Provider Information */
     public final static String ID = "basic-eventlog_eval_provider";
-    public final static String LABEL = "Basic EventLog: Startup events";
+    public final static String LABEL = "Basic EventLog: Incident/Error detection";
     public final static String DESCRIPTION = "Basic EventLog: Provides critical event evaluation";
+    
+    /** Additional information about this evaluation. Sent with each message */
+    public final static String MSG_EVAL_INFO = ""
+    		+ "Data Overview: "
+    		+ "https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/eventLogEval.html\r\n"
+    		+ "Data Overview by incident type: "
+    		+ "https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/eventLogEvalIndi.html\r\n"
+    		+ "Evaluation Overview: "
+    		+ "https://www.ogema-source.net/wiki/display/SEMA/Wettbewerb+und+Feldtest+ab+Mitte+2018\r\n";
     
     protected static final Logger logger = LoggerFactory.getLogger(EventLogEvalProvider.class);
     
@@ -68,7 +78,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		/*
 		 * Even though we're not processing any GaRoInputTypes, this function may
 		 * not return an empty array or an IllegalArgumentException will be thrown
-		 * and evaluation aborted.
+		 * and evaluation aborted. FIXME!
 		 */
 		return new GaRoDataType[] {GaRoDataType.OncePerGateway}; 
 		//return new GaRoDataType[] {GaRoDataType.TemperatureSetpointFeedback}; 
@@ -80,6 +90,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     }
 
     public class EvalCore extends GenericGaRoEvaluationCore {
+    	
     	
     	EventLogIncidents eli = new EventLogIncidents();
     	
@@ -104,6 +115,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time,
     			int size, int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
      		
+    		logger.info("Starting new Eventlog EvalCore");
     		
 			eli.writeCSVHeader();
     		
@@ -191,19 +203,73 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			return new SingleValueResultImpl<Float>(rt, cec.incidentsPerDay, inputData);
 		}
     };
- 
+    
+    public final static GenericGaRoResultType LINES_PARSED = new GenericGaRoResultType("LINES_PARSED",
+    		"Number of logfile lines parsed", IntegerResource.class, null) {
+		@Override
+		public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
+				List<TimeSeriesData> inputData) {
+			EvalCore cec = ((EvalCore)ec);
+			return new SingleValueResultImpl<Integer>(rt, cec.eli.linesParsedCount, inputData);
+		}
+    };
+    
+    /** In this list, a KPI for each of the configured incident types is held */
+    private List<GenericGaRoResultType> incidentResults = new ArrayList<GenericGaRoResultType>();
+	private List<String> incidentResultNamesToDisplay = new ArrayList<String>();
+	private boolean incidentResultsFilled = false; // Ensure that result types are only added once
+    
+    public void addIncidentResults() {
+    	
+    	if (incidentResultsFilled) return;
+    	
+    	// Since we don't have access to an EvalCore yet, we're creating a new ELI to get the list of types
+    	List<EventLogIncidentType> types = new EventLogIncidents().getTypes();
+    	
+    	for( EventLogIncidentType t : types ) {
+    		GenericGaRoResultType res = new  GenericGaRoResultType(t.name,
+    	    		t.description, IntegerResource.class, null) {
+    			@Override
+    			public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
+    					List<TimeSeriesData> inputData) {
+    				EvalCore cec = ((EvalCore)ec);
+    				EventLogIncidentType iType = cec.eli.getTypeByName(t.name);
+    				int incidentCount = iType.counter.getSum();
+    				
+    				return new SingleValueResultImpl<Integer>(rt, incidentCount, inputData);
+    			}
+    	    };
+    	    incidentResults.add(res);
+    	    if (t.display) incidentResultNamesToDisplay.add(t.name);
+    	}
+    	
+    	incidentResultNamesToDisplay.add("timeOfCalculation");
+    	incidentResultsFilled = true;
+
+    }
+    
     private static final List<GenericGaRoResultType> RESULTS = Arrays.asList(
 //   		BOXSTART_NUM, 
     		INCIDENT_COUNT,
-    		INCIDENTS_PER_DAY
+    		INCIDENTS_PER_DAY,
+    		LINES_PARSED
     		);
+    
     
 	@Override
 	protected List<GenericGaRoResultType> resultTypesGaRo() {
-		return RESULTS;
+		addIncidentResults();
+		List<GenericGaRoResultType> allResults = new ArrayList<GenericGaRoResultType>(RESULTS);
+		allResults.addAll(incidentResults);
+		return allResults;
 	}
 	
-	public final static String[] kpiResults = new String[]{"INCIDENT_COUNT", "INCIDENTS_PER_DAY"};	
+	public final static String[] kpiResults = new String[]{
+			"INCIDENT_COUNT",
+			"INCIDENTS_PER_DAY", 
+			"LINES_PARSED",
+			"timeOfCalculation"
+			};	
 	
 	/**
 	 * KPI Page(s)
@@ -216,13 +282,25 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 		KPIPageDefinition def = new KPIPageDefinition();
 		def.resultIds.add(kpiResults);
 		def.providerId = Arrays.asList(new String[] {ID});
-		def.configName = LABEL;
+		def.configName = ID + ": Total Incident Count";
 		def.urlAlias = "eventLogEval";
 		def.messageProvider = "eventLogMsgProv";
-		//def.specialIntervalsPerColumn.put("DURATION_HOURS", 1);
-		//def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
-		
+		def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
 		result.add(def);
+		
+		addIncidentResults();
+		String[] incidentResultNamesArr = new String[incidentResultNamesToDisplay.size()];
+		incidentResultNamesArr = incidentResultNamesToDisplay.toArray(incidentResultNamesArr);
+		
+		def = new KPIPageDefinition();
+		def.resultIds.add(incidentResultNamesArr);
+		def.providerId = Arrays.asList(new String[] {ID});
+		def.configName = ID + " Incident Count Per Type";
+		def.urlAlias = "eventLogEvalIndi";
+		def.defaultIntervalsPerColumnType = 1;
+		def.specialIntervalsPerColumn.put("timeOfCalculation", 1);
+		result.add(def);
+		
 		return result;
 	}
 
@@ -240,11 +318,10 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 
 				@Override
 				public String getMessage() {
-					String mes = "Time of message creation: "+TimeUtils.getDateAndTimeString(currentTime)+"\r\n"+
-							" Data Overview: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQualityStd.html\r\n"+
-							" Data Overview including Rexometer: https://sema.iee.fraunhofer.de:8443/com/example/app/evaluationofflinecontrol/basicQuality.html\r\n"+
-							" Evaluation Overview: https://www.ogema-source.net/wiki/display/SEMA/Wettbewerb+und+Feldtest+ab+Mitte+2018\r\n"+
-							detectKPIChanges(kpis, currentTime, kpiResults);
+					String mes = "Time of message creation: "
+							+ TimeUtils.getDateAndTimeString(currentTime) + "\r\n"
+							+ detectKPIChanges(kpis, currentTime, kpiResults) + "\r\n\r\n"
+							+ MSG_EVAL_INFO + "\r\n";
 					return mes;
 				}
 				

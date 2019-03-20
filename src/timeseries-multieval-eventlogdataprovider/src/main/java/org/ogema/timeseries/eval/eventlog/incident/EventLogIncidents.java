@@ -1,4 +1,4 @@
-package org.ogema.timeseries.eval.eventlog.base;
+package org.ogema.timeseries.eval.eventlog.incident;
 
 import java.io.File;
 import java.io.FileWriter;
@@ -8,9 +8,12 @@ import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
+import org.ogema.timeseries.eval.eventlog.incident.IncidentFilter;
 
 
 /**
+ * ELI provides management/tracking of eventlog incidents.
+ * 
  * Keeps track of incidents found in the event log.
  * By default, incident types defined in addDefaultIncidents are searched and accounted for.
  * 
@@ -24,11 +27,19 @@ public class EventLogIncidents {
 	private List<EventLogIncidentType> types = new ArrayList<EventLogIncidentType>();
 	
 	private FileWriter fw;
+	public int linesParsedCount = 0;
+	
+	/**
+	 * Example: timestamp of last incident, thus allowing for a cooldown on incident reporting
+	 */
+	public HashMap<String, Object> flags = new HashMap<>();
 	
 	public EventLogIncidents() {
 		System.out.println("ELI created.");
 		this.addDefaultTypes();
 	}
+	
+	
 	
 	/**
 	 * A type of incident e.g. a Homematic Error
@@ -40,6 +51,11 @@ public class EventLogIncidents {
 		public String name;
 		public String description;
 		public String searchString;
+		public IncidentFilter filter;
+		public boolean reverseFilter;
+		
+		/** Whether or not do display the type on the KPI page */
+		public boolean display;
 		
 		public IncidentCounter counter = new IncidentCounter();
 		
@@ -50,9 +66,13 @@ public class EventLogIncidents {
 		 * @param searchString String by which the incident can be found in the logfiles
 		 */
 		public EventLogIncidentType(String name, String description, String searchString) {
+			
 			this.name = name;
 			this.description = description;
 			this.searchString = searchString;
+			this.filter = new IncidentFilter.AllPassFilter();
+			this.reverseFilter = false;
+			this.display = true;
 
 		}
 		
@@ -100,27 +120,57 @@ public class EventLogIncidents {
 	public List<EventLogIncidentType> getTypes() {
 		return types;
 	}
-
-	/**
-	 * Add an incident type
-	 * @param t
-	 */
-	public void addType(EventLogIncidentType t) {
-		types.add(t);
+	
+	public EventLogIncidentType getTypeByName(String name) {
+		for(EventLogIncidentType t : types) {
+			if (t.name.equals(name)) return t;
+		}
+		return new EventLogIncidentType("NULL", "n/a", "");
 	}
+
 	
 	/**
 	 * adds the default types. run on construction.
 	 * configure/add default incident types here
 	 */
 	private void addDefaultTypes() {
-		types.add(new EventLogIncidentType("HomematicFehler", "n/a", "discarding write to"));
-		types.add(new EventLogIncidentType("FrameworkRestart", "n/a", "Flushing Data every: "));
-		types.add(new EventLogIncidentType("UPDSERVER_NOCON_EVENT", "n/a", "Error connecting to update server"));
-		types.add(new EventLogIncidentType("TRANSFER_FAIL_HOMEMATIC", "n/a", "PING failed"));
-		types.add(new EventLogIncidentType("OLD_BUNDLE", "n/a", "Inactive bundle found"));
-		types.add(new EventLogIncidentType("SHUTDOWN_DB", "n/a", "Closing FendoDB data/slotsdb"));
+		
+		/*
+		 * Simple incidents without filters:
+		 */
+		types.add(new EventLogIncidentType("UPDSERVER_NOCON_EVENT", "Err. connecting to update server", 
+				"Error connecting to update server"));
+		types.add(new EventLogIncidentType("TRANSFER_FAIL_HOMEMATIC", "Homematic Transfer Fail", "PING failed"));
+		types.add(new EventLogIncidentType("OLD_BUNDLE", "Inactive/Old bundle", "Inactive bundle found"));
+		
 
+		/*
+		 * incidents with filters:
+		 */
+		EventLogIncidentType homematicErr = new EventLogIncidentType(
+				"HOMEMATIC_ERR", "Homematic Error", "discarding write to");
+		homematicErr.filter = new IncidentFilter.CooldownFilter(flags, 3_600_000);
+		types.add(homematicErr);
+		
+		EventLogIncidentType shutdownDB = new EventLogIncidentType(
+				"SHUTDOWN_DB", "FendoDB shutdown", "Closing FendoDB data/slotsdb");
+		/** This filter sets a flag to indicate a DB shutdown, but does not count the incident itself */
+		shutdownDB.filter = new IncidentFilter.OccurrenceFlagFilter(flags, false);
+		shutdownDB.display = false; // since this is only a "helper incident", no need to display on KPI page
+		types.add(shutdownDB);
+		
+		EventLogIncidentType frameworkRestartClean = new EventLogIncidentType(
+				"FW_RESTART_CLEAN", "clean restart, device likeley restarted on its own", "Flushing Data every: ");
+		/** This filter checks whether the DB was shut down, indicating a clean shutdown */
+		frameworkRestartClean.filter = new IncidentFilter.CheckOccurrenceFlagFilter(flags, "SHUTDOWN_DB");
+		types.add(frameworkRestartClean);
+		
+		EventLogIncidentType frameworkRestartUnclean = new EventLogIncidentType(
+				"FW_RESTART_UNCLEAN", "unclean restart, device likely restarted forcibly", "Flushing Data every: ");
+		/** This filter checks whether the DB was shut down, indicating a clean shutdown */
+		frameworkRestartUnclean.filter = new IncidentFilter.CheckOccurrenceFlagFilter(flags, "SHUTDOWN_DB");
+		frameworkRestartUnclean.reverseFilter = true;
+		types.add(frameworkRestartUnclean);
 	}
 	
 	/**
@@ -133,17 +183,6 @@ public class EventLogIncidents {
 			sum += t.counter.getSum();
 		}
 		return sum;
-	}
-	
-	/**
-	 * Dump some basic stats to console
-	 */
-	@Deprecated
-	public void dumpStats() {
-		System.out.println("Dumping EventLog stats:");
-		for(EventLogIncidentType t : types) {
-			System.out.println(t.name + " has occured a total of " + t.counter.getSum() + " times.");
-		}
 	}
 
 	/**
@@ -217,7 +256,6 @@ public class EventLogIncidents {
 			fw.append(line);
 			fw.close();
 		} catch (IOException e) {
-			// TODO Auto-generated catch block
 			e.printStackTrace();
 			return false;
 		}
@@ -242,6 +280,5 @@ public class EventLogIncidents {
 	public void closeCSVFile() throws IOException {
 		fw.close();
 	}
-	
 	
 }
