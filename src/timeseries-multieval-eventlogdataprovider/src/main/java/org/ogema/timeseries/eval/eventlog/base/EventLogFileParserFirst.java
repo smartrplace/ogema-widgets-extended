@@ -30,8 +30,6 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 	protected final Logger log;
 	protected final String gwId;
 
-	private PrintWriter pw;
-
 	
 	public EventLogFileParserFirst(Logger logger, String gwId, EventLogIncidents eli) {
 		this.log = logger;
@@ -47,13 +45,6 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		List<EventLogIncidentType> incidentTypes = eli.getTypes();
 		List<EventLogResult> result = new ArrayList<>();
 		BufferedReader br = new BufferedReader(new InputStreamReader(logFileStream));
-
-		File dir = new File("EventLogEvaluationResults");
-		dir.mkdirs();
-		String fileName = new SimpleDateFormat("yyyy-MM-dd'.txt'").format(new Date());
-		File file = new File(dir, "EventLog_"+ fileName);
-		file.createNewFile();
-		pw = new PrintWriter(new FileWriter(file, true));
 		
 		while(true) {
 			String line = br.readLine();
@@ -76,7 +67,6 @@ public class EventLogFileParserFirst implements EventLogFileParser {
 		}
 		
 		br.close();
-		pw.close();
 			
 		return result;
 	}
@@ -186,7 +176,6 @@ public class EventLogFileParserFirst implements EventLogFileParser {
  		
  		if(elr.eventMessage != null) {
 			log.debug(elr.eventMessage);
-			pw.append(elr.eventMessage+"\r\n");
  		}
  		
 		result.add(elr);
