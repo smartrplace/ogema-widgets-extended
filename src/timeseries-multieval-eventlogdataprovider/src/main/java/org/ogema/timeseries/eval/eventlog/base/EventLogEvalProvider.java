@@ -149,7 +149,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 				eventNum += fileResult.size();
 			}
 			
-			System.out.println("Finished event log data evaluation in "+this.getClass().getName());
+			logger.info("Finished event log data evaluation in "+this.getClass().getName());
 
 			incidentCount = eli.getTotalIncidents();
 			incidentsPerDay = (float)incidentCount / ( (float)totalTime / DAY_MILLIS );
