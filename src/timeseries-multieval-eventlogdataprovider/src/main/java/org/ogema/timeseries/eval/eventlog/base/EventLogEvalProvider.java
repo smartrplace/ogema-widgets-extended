@@ -10,7 +10,6 @@ import java.util.List;
 import java.util.Map;
 
 import org.ogema.core.channelmanager.measurements.SampledValue;
-import org.ogema.core.model.simple.FloatResource;
 import org.ogema.core.model.simple.IntegerResource;
 import org.ogema.timeseries.eval.eventlog.util.EventLogFileParser.EventLogResult;
 import org.ogema.timeseries.eval.eventlog.incident.EventLogIncidents;
@@ -193,16 +192,7 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 			return new SingleValueResultImpl<Integer>(rt, cec.incidentCount, inputData);
 		}
     };
-
-    public final static GenericGaRoResultType INCIDENTS_PER_DAY = new GenericGaRoResultType("INCIDENTS_PER_DAY",
-    		"Number of incidents per day", FloatResource.class, null) {
-		@Override
-		public SingleEvaluationResult getEvalResult(GenericGaRoEvaluationCore ec, ResultType rt,
-				List<TimeSeriesData> inputData) {
-			EvalCore cec = ((EvalCore)ec);
-			return new SingleValueResultImpl<Float>(rt, cec.incidentsPerDay, inputData);
-		}
-    };
+    
     
     public final static GenericGaRoResultType LINES_PARSED = new GenericGaRoResultType("LINES_PARSED",
     		"Number of logfile lines parsed", IntegerResource.class, null) {
@@ -251,7 +241,6 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
     private static final List<GenericGaRoResultType> RESULTS = Arrays.asList(
 //   		BOXSTART_NUM, 
     		INCIDENT_COUNT,
-    		INCIDENTS_PER_DAY,
     		LINES_PARSED
     		);
     
@@ -266,7 +255,6 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	
 	public final static String[] kpiResults = new String[]{
 			"INCIDENT_COUNT",
-			"INCIDENTS_PER_DAY", 
 			"LINES_PARSED",
 			"timeOfCalculation"
 			};	
