@@ -1,5 +1,6 @@
 package org.ogema.util.kpieval;
 
+import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
 import java.util.List;
@@ -18,11 +19,20 @@ import de.iwes.util.timer.AbsoluteTiming;
 public class KPIEvalUtil {
 	
 	public static final int COLUMN_WIDTH = 15;
+	
+	public static final int MODE_PERC = 0; // detection based on a percent value
+	public static final int MODE_ABS = 1; // detection based on a fixed threshold
 
 	/** Use some default values if no threshold / no idsToCheckAlways are given */
 	public static String detectKPIChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime,
 			String[] resultIds) {
 		return detectKPIChanges(kpis, currentTime, resultIds, 0.75f, 1.5f, Collections.emptyList());
+	}
+	
+	public static String detectKPIChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime,
+			String[] resultIds, float downThreshold, float upThreshold, List<String> idsToCheckAlways) {
+		int mode = MODE_PERC;
+		return detectKPIChanges(kpis, currentTime, resultIds, downThreshold, upThreshold, idsToCheckAlways, mode);
 	}
 	
 	/** Report KPI columns that either dropped significantly or were increased significantly compared
@@ -38,38 +48,65 @@ public class KPIEvalUtil {
 	 * 		lines will be generated.
 	 * @return
 	 */
-	public static String detectKPIChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime,
-			String[] resultIds, float downThreshold, float upThreshold, List<String> idsToCheckAlways) {
+	public static String detectKPIChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime, 
+			String[] resultIds, float downThreshold, float upThreshold, List<String> idsToCheckAlways,
+			int detectionMode) {
 
 			String mes = "";
 			for(KPIStatisticsManagementI gw: kpis) {
+				
 				if(gw.specialLindeId().startsWith("Overall")) continue;
+				
 				int idx = 0;
 				boolean checkStillRexoOnly = false;
+				
 				for(KPIStatisticsManagementI kpi2: gw.ksmList()) {
+				
 					if(checkStillRexoOnly && (!idsToCheckAlways.contains(kpi2.resultTypeId())))
 						continue;
+					
 					if(resultIds[idx].equals("timeOfCalculation")) {
 						//we do not care about this
 						continue;
-					} else {
+					}
+					else {
+						
 						if(kpi2.resultTypeId().startsWith("$")) {
 							//we do not care about String values here
 							continue;									
-						} else {
+						}
+						else {
 							SampledValue sv = kpi2.getValueNonAligned(AbsoluteTiming.DAY, currentTime, 1);
 							SampledValue svPrev = kpi2.getValueNonAligned(AbsoluteTiming.DAY, currentTime, 2);
+						
 							if((sv == null) && (svPrev != null)) {
-								mes += (getRightAlignedString(gw.specialLindeId(), COLUMN_WIDTH)+" has NO value ANYMORE in "+kpi2.resultTypeId());
-							} else if((sv != null) && (svPrev == null)) {
-								mes += (getRightAlignedString(gw.specialLindeId(), COLUMN_WIDTH)+" got back value for "+kpi2.resultTypeId())+" : "+sv.getValue().getFloatValue();
-							} else if(sv != null) {
+								mes += (getRightAlignedString(
+										gw.specialLindeId(), COLUMN_WIDTH)
+										+ " has NO value ANYMORE in " + kpi2.resultTypeId());
+							}
+						
+							else if((sv != null) && (svPrev == null)) {
+								mes += (getRightAlignedString(
+										gw.specialLindeId(), COLUMN_WIDTH)
+										+ " got back value for " + kpi2.resultTypeId())
+										+ " : " + sv.getValue().getFloatValue();
+							}
+							
+							else if(sv != null) {
 								float val = sv.getValue().getFloatValue();
 								float valPrev = svPrev.getValue().getFloatValue();
-								int mode = 0;
-								if(val < downThreshold*valPrev) mode = -1;
-								else if(val > upThreshold*valPrev) mode = 1;
-								if(mode != 0) {
+								
+								int jump = 0;
+								if (detectionMode == MODE_PERC) {
+									if(val < downThreshold*valPrev) jump = -1; // jump down
+									else if(val > upThreshold*valPrev) jump = 1; // jump up	
+								}
+								else if (detectionMode == MODE_ABS) {
+									if(val < downThreshold && !(valPrev < downThreshold)) jump = -1;
+									else if(val > upThreshold && !(valPrev > upThreshold)) jump = 1;
+								}
+								
+								if(jump != 0) {
 									final GaRoDataTypeI dataType;
 									GaRoSingleEvalProvider prov = kpi2.getEvalProvider();
 									ResultType r = null;
@@ -78,9 +115,11 @@ public class KPIEvalUtil {
 									}
 									if(r != null && r instanceof GaRoDataTypeI) dataType = (GaRoDataTypeI) r;
 									else dataType = null;
-									mes += (getRightAlignedString(gw.specialLindeId(), COLUMN_WIDTH)+"#"+kpi2.resultTypeId()+
-											((mode>0)?" jumped up ":" fell down ")+" from "+KPIMonitoringReport.formatValue(svPrev, dataType)+
-											" to "+KPIMonitoringReport.formatValue(sv, dataType)+"\r\n");
+									mes += (getRightAlignedString(gw.specialLindeId(), COLUMN_WIDTH)
+											+ "#"+kpi2.resultTypeId() +	((jump>0) ? " jumped up ":" fell down ")
+											+ " from " + KPIMonitoringReport.formatValue(svPrev, dataType)
+											+ " to " + KPIMonitoringReport.formatValue(sv, dataType)
+											+ "\r\n");
 									checkStillRexoOnly = true;
 								}
 							}
@@ -92,6 +131,22 @@ public class KPIEvalUtil {
 			return mes;
 			
 		}
+	
+	/**
+	 * Detect KPI changes based on an absolute threshold.
+	 * Report if the threshold has been crossed.
+	 * @return
+	 */
+	public static String detectKPIChangesAbs(Collection<KPIStatisticsManagementI> kpis, long currentTime,
+			String[] resultIds, float downThreshold, float upThreshold, List<String> idsToCheckAlways) {
+		int mode = MODE_ABS;
+		return detectKPIChanges(kpis, currentTime, resultIds, downThreshold, upThreshold, idsToCheckAlways, mode);
+	}
+	public static String detectKPIChangesAbs(Collection<KPIStatisticsManagementI> kpis, long currentTime,
+			String[] resultIds, float downThreshold, float upThreshold) {
+		List<String> idsToCheckAlways = Arrays.asList(resultIds);
+		return detectKPIChangesAbs(kpis, currentTime, resultIds, downThreshold, upThreshold, idsToCheckAlways);
+	}
 	
 	public static String getRightAlignedString(String in, int len) {
 		if(in.length() >= len) return in.substring(0, len);
