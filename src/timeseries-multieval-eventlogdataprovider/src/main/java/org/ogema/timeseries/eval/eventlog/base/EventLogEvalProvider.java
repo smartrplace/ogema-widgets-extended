@@ -308,7 +308,8 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 				public String getMessage() {
 					String mes = "Time of message creation: "
 							+ TimeUtils.getDateAndTimeString(currentTime) + "\r\n"
-							+ detectKPIChanges(kpis, currentTime, kpiResults) + "\r\n\r\n"
+							+ KPIEvalUtil.detectKPIChangesAbs(kpis, currentTime, kpiResults, 0.5f, 0.5f)
+							+ "\r\n\r\n"
 							+ MSG_EVAL_INFO + "\r\n";
 					return mes;
 				}
@@ -321,26 +322,6 @@ public class EventLogEvalProvider extends GenericGaRoSingleEvalProviderPreEval {
 	public KPIMessageDefinitionProvider getMessageProvider(String messageProviderId) {
 		if(messageProviderId.equals("eventLogMsgProv")) return eventLogMsgProv;
 		return null;
-	}
-	
-	/**
-	 * Detect/Search for significant changes in the given KPIs
-	 * @param kpis
-	 * @param currentTime
-	 * @param kpiResults
-	 * @return
-	 */
-	protected static String detectKPIChanges(Collection<KPIStatisticsManagementI> kpis, long currentTime, 
-			String[] kpiResults) {
-		
-		String[] resultIds = kpiResults;
-		
-		float downThreshold = 0.75f; // TODO: find good default value; make threshold configurable
-		float upThreshold = 1.5f; // TODO: find good default value; make threshold configurable
-		List<String> idsToCheckAlways = Arrays.asList(kpiResults);
-		
-		return KPIEvalUtil.detectKPIChanges(kpis, currentTime, resultIds, 
-				downThreshold, upThreshold, idsToCheckAlways);
 	}
 	
 	
