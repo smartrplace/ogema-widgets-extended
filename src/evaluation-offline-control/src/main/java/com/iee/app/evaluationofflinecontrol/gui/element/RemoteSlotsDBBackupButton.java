@@ -47,6 +47,7 @@ public abstract class RemoteSlotsDBBackupButton extends Button {
 	public static final long MINUTE_MILLIS = 60000;
 	public static final long HOUR_MILLIS = 60 * MINUTE_MILLIS;
 	public static final long DAY_MILLIS = 24 * HOUR_MILLIS;
+	public static final Path REMOTE_SLOTS_BACKUP_DESTINATION_PATH = Paths.get("../evaluationresults/remoteSlotsBackup.zip");
 
 	//Override these
 	protected Path getBasePath(OgemaHttpRequest req) {
@@ -73,7 +74,7 @@ public abstract class RemoteSlotsDBBackupButton extends Button {
 			endTime = itv.multiEnd[itv.multiStart.length-1];
 		}
 		
-		Path dest = Paths.get("../evaluationresults/remoteSlotsBackup.zip");
+		Path dest = REMOTE_SLOTS_BACKUP_DESTINATION_PATH;
 		performSlotsBackup(null, dest, startTime, endTime, gwIDs, null, false);
 		
 		/*List<File> inputFiles = new ArrayList<>();

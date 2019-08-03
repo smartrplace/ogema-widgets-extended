@@ -16,6 +16,7 @@
 package com.iee.app.evaluationofflinecontrol.gui;
 
 import java.io.File;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
@@ -30,6 +31,7 @@ import java.util.stream.Collectors;
 import org.ogema.core.application.ApplicationManager;
 import org.ogema.core.model.Resource;
 import org.ogema.core.resourcemanager.ResourceNotFoundException;
+import org.ogema.core.timeseries.ReadOnlyTimeSeries;
 import org.ogema.externalviewer.extensions.IntervalConfiguration;
 import org.ogema.externalviewer.extensions.ScheduleViewerOpenButton;
 import org.ogema.externalviewer.extensions.ScheduleViewerOpenButtonEval;
@@ -43,6 +45,7 @@ import org.ogema.util.jsonresult.management.api.EvalResultManagement;
 import com.iee.app.evaluationofflinecontrol.OfflineEvalServiceAccess;
 import com.iee.app.evaluationofflinecontrol.OfflineEvaluationControlController;
 import com.iee.app.evaluationofflinecontrol.gui.element.RemoteSlotsDBBackupButton;
+import com.iee.app.evaluationofflinecontrol.util.ExportBulkData;
 import com.iee.app.evaluationofflinecontrol.util.ScheduleViewerConfigProvEvalOff;
 import com.iee.app.evaluationofflinecontrol.util.SmartEffPageConfigProvEvalOff;
 import com.iee.app.evaluationofflinecontrol.util.StandardConfigurations;
@@ -55,6 +58,7 @@ import de.iwes.timeseries.eval.api.configuration.ConfigurationInstance;
 import de.iwes.timeseries.eval.api.configuration.ConfigurationInstance.GenericObjectConfiguration;
 import de.iwes.timeseries.eval.api.semaextension.variant.GaRoEvalHelperJAXB_V2;
 import de.iwes.timeseries.eval.api.semaextension.variant.GatewayDataExportUtil;
+import de.iwes.timeseries.eval.base.provider.utils.TimeSeriesDataImpl;
 import de.iwes.timeseries.eval.garo.api.base.GaRoMultiEvalDataProvider;
 import de.iwes.timeseries.eval.garo.api.base.GaRoMultiResult;
 import de.iwes.timeseries.eval.garo.api.base.GaRoPreEvaluationProvider;
@@ -85,6 +89,7 @@ import de.iwes.widgets.html.form.textfield.TextField;
 import de.iwes.widgets.html.multiselect.TemplateMultiselect;
 import de.iwes.widgets.multiselect.extended.MultiSelectExtended;
 import de.iwes.widgets.resource.widget.textfield.BooleanResourceCheckbox;
+import de.iwes.widgets.reswidget.schedulecsvdownload.ScheduleCsvDownload;
 import de.iwes.widgets.template.DefaultDisplayTemplate;
 
 
@@ -618,6 +623,8 @@ public class OfflineEvaluationControl {
 
 		Button backupButton = getBackupButton(page,
 				"backupButton", multiSelectGWs, app, gateWaySelection, selectConfig);
+		Button csvBulkButton = getCSVExportButton(page,
+				"csvBulkButton", multiSelectGWs, selectProvider, app, gateWaySelection, selectConfig);
 		
 		stopLastEvalButton = new Button(page, "stopLastEvalButton", "Stop Last Eval") {
 			private static final long serialVersionUID = 1L;
@@ -774,6 +781,7 @@ public class OfflineEvaluationControl {
 		table1.setContent(i, 0, "Evaluation Acronym");
 		table1.setContent(i, 1, evalName			);
 		table1.setContent(i, 2, backupButton		);
+		table1.setContent(i, 2, csvBulkButton		);
 		i++;
 		table1.setContent(i, 0, startOfflineEval 	);
 		table1.setContent(i, 1, openScheduleViewer  );
@@ -1168,7 +1176,8 @@ public class OfflineEvaluationControl {
 		@Override
 		protected IntervalConfiguration getInterval(OgemaHttpRequest req) {
 			String config = selectConfig.getSelectedLabel(req);
-			if(config.equals("TestOneMonth")) {
+			return ExportBulkData.getInterval(config, controller.appMan);
+			/*if(config.equals("TestOneMonth")) {
 				IntervalConfiguration r = new IntervalConfiguration();
 				long now = controller.appMan.getFrameworkTime();
 				r.end = AbsoluteTimeHelper.getIntervalStart(now, AbsoluteTiming.MONTH)-1;
@@ -1197,7 +1206,7 @@ public class OfflineEvaluationControl {
 				r.start = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -2, AbsoluteTiming.MONTH);
 				return r;
 			}			
-			return StandardConfigurations.getConfigDuration(config, controller.appMan);
+			return StandardConfigurations.getConfigDuration(config, controller.appMan);*/
 		}
 		
 		@Override
@@ -1206,4 +1215,56 @@ public class OfflineEvaluationControl {
 		}
 	};
 	}
+	
+	public static Button getCSVExportButton(WidgetPage<?> page, String widgetId,
+			TemplateMultiselect<String> multiSelectGWs,
+			TemplateDropdown<GaRoSingleEvalProvider> selectProvider,
+			OfflineEvaluationControlController controller,
+			MultiSelectExtended<String> gateWaySelection,
+			TemplateDropdown<String> selectConfig) {
+	return new Button(page, widgetId, "Export CSV Bulk") {
+		private static final long serialVersionUID = 1L;
+		
+		@Override
+		public void onGET(OgemaHttpRequest req) {
+			if(multiSelectGWs.getSelectedItems(req).isEmpty()) {
+				setWidgetVisibility(false, req);
+			} else if(controller.showBackupButton())
+				setWidgetVisibility(true, req);
+			else
+				setWidgetVisibility(false, req);
+		};
+
+		@Override
+		public void onPOSTComplete(String data, OgemaHttpRequest req) {
+			String config = selectConfig.getSelectedLabel(req);
+			IntervalConfiguration intv = ExportBulkData.getInterval(config, controller.appMan);
+			Path dest = Paths.get("../evaluationresults");//RemoteSlotsDBBackupButton.REMOTE_SLOTS_BACKUP_DESTINATION_PATH;
+			
+			final GaRoSingleEvalProvider eval = selectProvider.getSelectedItem(req);
+			final List<String> gwIDs = (List<String>) gateWaySelection.multiSelect.getSelectedLabels(req);
+			List<GaRoMultiEvalDataProvider<?>> dps = controller.getDataProvidersToUse();
+			GaRoMultiEvalDataProvider<?> dp = dps.get(0);
+			List<TimeSeriesData> input = GaRoEvalHelper.getFittingTSforEval(dp, eval, gwIDs);
+			//TODO: This is hardcoded for humidity and temperature
+			ExportBulkData.cleanList(input, true, true, false);
+			
+			List<ReadOnlyTimeSeries> schedules = new ArrayList<>();
+			for(TimeSeriesData tsd: input) {
+				schedules.add(((TimeSeriesDataImpl)tsd).getTimeSeries());
+			}
+			try {
+				ScheduleCsvDownload.exportFile(intv.start, intv.end,
+						schedules,
+						dest, "csvBulk",
+						false, null, 5);
+				System.out.println("Bulk export to "+dest+" done.");
+			} catch (IOException e) {
+				e.printStackTrace();
+				throw new IllegalStateException(e);
+			}
+		}
+	};
+	}
+
 }
