@@ -89,6 +89,11 @@
         </dependency>  
         <dependency>
             <groupId>org.ogema.widgets</groupId>
+            <artifactId>widget-experimental</artifactId>
+            <version>2.2.0_20190204</version>
+        </dependency>  
+        <dependency>
+            <groupId>org.ogema.widgets</groupId>
             <artifactId>util-extended</artifactId>
         </dependency>
 		<dependency>

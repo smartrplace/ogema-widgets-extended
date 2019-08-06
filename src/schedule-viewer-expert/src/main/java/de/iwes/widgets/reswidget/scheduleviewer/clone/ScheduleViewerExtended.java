@@ -38,6 +38,7 @@ import org.ogema.core.model.simple.SingleValueResource;
 import org.ogema.core.model.simple.StringResource;
 import org.ogema.core.recordeddata.RecordedData;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
+import org.ogema.widgets.reswidget.schedulecsvdownload.expert.ScheduleCsvDownloadExpert;
 
 import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
 import de.iwes.widgets.api.widgets.OgemaWidget;
@@ -60,7 +61,6 @@ import de.iwes.widgets.html.multiselect.TemplateMultiselect;
 import de.iwes.widgets.html.plotflot.FlotConfiguration;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulator;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulatorConfiguration;
-import de.iwes.widgets.reswidget.schedulecsvdownload.ScheduleCsvDownload;
 import de.iwes.widgets.reswidget.scheduleplot.flot.ScheduleDataFlot;
 import de.iwes.widgets.reswidget.scheduleplot.flot.SchedulePlotFlot;
 import de.iwes.widgets.reswidget.scheduleviewer.ResourceScheduleViewer;
@@ -200,7 +200,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected SchedulePlotFlot schedulePlot; // TODO generic interface
 	protected ScheduleManipulator manipulator;
 	protected StaticHeader manipulatorHeader;
-	protected ScheduleCsvDownload<ReadOnlyTimeSeries> csvDownload;
+	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
 	protected StaticHeader downloadHeader;
 	protected Label optionsLabel;
 	protected Checkbox optionsCheckbox;
@@ -371,7 +371,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	private void initRow4Downloaddata(WidgetPage<?> page, String id, final ApplicationManager am) {
 		downloadHeader = new StaticHeader(3, "Download data");
 		downloadHeader.addStyle(HtmlStyle.ALIGNED_CENTER);
-		this.csvDownload = new ScheduleCsvDownload<ReadOnlyTimeSeries>(page, id + "_dataDownload", am.getWebAccessManager()) {
+		this.csvDownload = new ScheduleCsvDownloadExpert<ReadOnlyTimeSeries>(page, id + "_dataDownload", am.getWebAccessManager()) {
 
 			private static final long serialVersionUID = 1L;
 
