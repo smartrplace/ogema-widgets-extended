@@ -77,6 +77,34 @@ public class ExportBulkData {
 		}
 		input.removeAll(toRemove);
 	}
+	/** Like {@link #cleanList(List, boolean, boolean, boolean)}, but specifiy arbitraty inputs
+	 * 
+	 * @param input list to clean input data rows from not specified in inputsToUse
+	 * @param inputsToUse Strings to search for in timeseries labels
+	 */
+	public static void cleanList(List<TimeSeriesData> input, List<String> inputsToUse) {
+		List<TimeSeriesData> toRemove = new ArrayList<>();
+		for (TimeSeriesData tsdBase : input) {
+			if(!(tsdBase instanceof TimeSeriesDataOffline)) throw new IllegalStateException("getStartAndEndTime only works on TimeSeriesData input!");
+			TimeSeriesDataOffline tsd = (TimeSeriesDataOffline) tsdBase;
+			boolean found = false;
+			if(tsd instanceof TimeSeriesDataExtendedImpl) {
+				TimeSeriesDataExtendedImpl tse = (TimeSeriesDataExtendedImpl)tsd;
+				if(tse.type instanceof GaRoDataTypeI) {
+					String inputLabel = ((GaRoDataTypeI)tse.type).label(null);
+					for(String use: inputsToUse) {
+						if(inputLabel.contains(use)) {
+							found = true;
+							break;
+						}
+					}
+				}
+			}
+			if(!found)
+				toRemove.add(tsdBase);
+		}
+		input.removeAll(toRemove);
+	}
 	
 	public static String getDeviceShortId(String location) {
 		String[] parts = location.split("/");
