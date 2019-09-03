@@ -35,6 +35,7 @@ import org.ogema.core.timeseries.ReadOnlyTimeSeries;
 import org.ogema.externalviewer.extensions.IntervalConfiguration;
 import org.ogema.externalviewer.extensions.ScheduleViewerOpenButton;
 import org.ogema.externalviewer.extensions.ScheduleViewerOpenButtonEval;
+import org.ogema.externalviewer.extensions.ScheduleViewerOpenButtonEval.TimeSeriesNameProvider;
 import org.ogema.externalviewer.extensions.SmartEffEditOpenButton;
 import org.ogema.model.jsonresult.MultiKPIEvalConfiguration;
 import org.ogema.util.directresourcegui.kpi.KPIStatisticsUtil;
@@ -1116,6 +1117,9 @@ public class OfflineEvaluationControl {
 	public static interface ScheduleViewerOpenButtonDataProvider {
 		List<TimeSeriesData> getData(OgemaHttpRequest req);
 		IntervalConfiguration getITVConfiguration(String config, ApplicationManager appMan);
+		default TimeSeriesNameProvider nameProvider() {
+			return new TimeSeriesNameProvider() {};
+		}
 	}
 	public static ScheduleViewerOpenButton getScheduleViewerOpenButton(WidgetPage<?> page, String widgetId,
 			TemplateMultiselect<String> multiSelectGWs,
@@ -1124,7 +1128,7 @@ public class OfflineEvaluationControl {
 			//MultiSelectExtended<String> gateWaySelection,
 			TemplateDropdown<String> selectConfig,
 			ScheduleViewerOpenButtonDataProvider provider) {
-		return new ScheduleViewerOpenButtonEval(page, widgetId, "Data Viewer",
+		ScheduleViewerOpenButtonEval schedOpenButtonEval = new ScheduleViewerOpenButtonEval(page, widgetId, "Data Viewer",
 				ScheduleViewerConfigProvEvalOff.PROVIDER_ID,
 				ScheduleViewerConfigProvEvalOff.getInstance()) {
 			private static final long serialVersionUID = 1L;
@@ -1153,6 +1157,8 @@ public class OfflineEvaluationControl {
 			};
 
 		};
+		schedOpenButtonEval.setNameProvider(provider.nameProvider());
+		return schedOpenButtonEval;
 	}
 	
 	public static Button getBackupButton(WidgetPage<?> page, String widgetId,
@@ -1223,6 +1229,16 @@ public class OfflineEvaluationControl {
 			OfflineEvaluationControlController controller,
 			MultiSelectExtended<String> gateWaySelection,
 			TemplateDropdown<String> selectConfig) {
+		return getCSVExportButton(page, widgetId, multiSelectGWs, selectProvider, controller,
+				gateWaySelection, selectConfig, null);
+	}
+	public static Button getCSVExportButton(WidgetPage<?> page, String widgetId,
+			TemplateMultiselect<String> multiSelectGWs,
+			TemplateDropdown<GaRoSingleEvalProvider> selectProvider,
+			OfflineEvaluationControlController controller,
+			MultiSelectExtended<String> gateWaySelection,
+			TemplateDropdown<String> selectConfig,
+			TimeSeriesNameProvider nameProvider) {
 	return new Button(page, widgetId, "Export CSV Bulk") {
 		private static final long serialVersionUID = 1L;
 		
@@ -1255,7 +1271,8 @@ public class OfflineEvaluationControl {
 				schedules.add(((TimeSeriesDataImpl)tsd).getTimeSeries());
 			}
 			try {
-				List<TimeSeriesFilterExtended> filters = ScheduleViewerOpenButtonEval.getTimeSeriesWithFilters(input, config).filters;
+				List<TimeSeriesFilterExtended> filters = ScheduleViewerOpenButtonEval.getTimeSeriesWithFilters(
+						input, config, nameProvider).filters;
 				ScheduleCsvDownloadExpert.exportFile(intv.start, intv.end,
 						schedules,
 						dest, "csvBulk",
