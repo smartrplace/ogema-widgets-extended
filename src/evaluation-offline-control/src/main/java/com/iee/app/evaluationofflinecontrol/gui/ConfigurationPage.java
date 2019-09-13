@@ -125,6 +125,9 @@ public class ConfigurationPage {
 		BooleanResourceCheckbox showBackup = new BooleanResourceCheckbox(page, "showBackup",
 				"", app.appConfigData.showBackupButton());
 		
+		BooleanResourceCheckbox expertMode = new BooleanResourceCheckbox(page, "expertMode",
+				"", app.appConfigData.expertMode());
+
 		/** Basic Quality Evaluation*/
 		Button configureMultiGWQualityPage = new Button(page, "configureMultiGWQualityPage",
 				"Configure Multi-GW Basic Quality KPI page") {
@@ -296,7 +299,9 @@ public class ConfigurationPage {
 		setContent(4, 1, checkShowShortIntervals);
 		configTable.setContent(5, 0, "Show backup button in eval start page").
 		setContent(5, 1, showBackup);
-		int configButtonIdx = 6;
+		configTable.setContent(6, 0, "Expert mode").
+		setContent(6, 1, expertMode);
+		int configButtonIdx = 7;
 		configTable.setContent(configButtonIdx, 0, "Configure Gateways to Use").
 			setContent(configButtonIdx, 1, gatewaysToUseButton);
 		

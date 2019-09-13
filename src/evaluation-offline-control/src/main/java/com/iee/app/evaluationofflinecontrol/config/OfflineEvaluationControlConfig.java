@@ -50,4 +50,6 @@ public interface OfflineEvaluationControlConfig extends Configuration {
 	
 	/** For the Zip-SCP-based Remote Supervision*/
 	TimeResource lastAutoZipBackup();
+	
+	BooleanResource expertMode();
 }

@@ -85,7 +85,15 @@ public class ExportBulkData {
 	public static void cleanList(List<TimeSeriesData> input, List<String> inputsToUse) {
 		List<TimeSeriesData> toRemove = new ArrayList<>();
 		for (TimeSeriesData tsdBase : input) {
-			if(!(tsdBase instanceof TimeSeriesDataOffline)) throw new IllegalStateException("getStartAndEndTime only works on TimeSeriesData input!");
+			String id = tsdBase.label(null);
+			boolean found = false;
+			for(String use: inputsToUse) {
+				if(id.contains(use)) {
+					found = true;
+					break;
+				}
+			}
+			/*if(!(tsdBase instanceof TimeSeriesDataOffline)) throw new IllegalStateException("getStartAndEndTime only works on TimeSeriesData input!");
 			TimeSeriesDataOffline tsd = (TimeSeriesDataOffline) tsdBase;
 			boolean found = false;
 			if(tsd instanceof TimeSeriesDataExtendedImpl) {
@@ -99,7 +107,7 @@ public class ExportBulkData {
 						}
 					}
 				}
-			}
+			}*/
 			if(!found)
 				toRemove.add(tsdBase);
 		}

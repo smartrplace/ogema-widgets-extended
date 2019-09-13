@@ -118,6 +118,10 @@ public class ScheduleViewerBasicApp implements Application {
 		
 		mc = overviewPage.getMenuConfiguration();
 		mc.setCustomNavigation(customMenu);
+		if(Boolean.getBoolean("org.smartrplace.smarteff.defaultservice.reducetopnavi")) {
+			mc.setLanguageSelectionVisible(false);
+			mc.setNavigationVisible(false);
+		}
 		Boolean testRes = Boolean.getBoolean("org.ogema.apps.createtestresources");
 		if (testRes) {
 			createTestResource();

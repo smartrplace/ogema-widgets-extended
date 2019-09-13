@@ -1151,7 +1151,7 @@ public class OfflineEvaluationControl {
 	
 			@Override
 			public void onGET(OgemaHttpRequest req) {
-				if(multiSelectGWs.getSelectedItems(req).isEmpty()) {
+				if((multiSelectGWs != null) && multiSelectGWs.getSelectedItems(req).isEmpty()) {
 					disable(req);
 				} else enable(req);
 			};
