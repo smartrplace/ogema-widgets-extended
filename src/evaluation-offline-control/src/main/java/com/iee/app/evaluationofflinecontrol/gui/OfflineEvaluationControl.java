@@ -91,6 +91,9 @@ import de.iwes.widgets.html.form.textfield.TextField;
 import de.iwes.widgets.html.multiselect.TemplateMultiselect;
 import de.iwes.widgets.multiselect.extended.MultiSelectExtended;
 import de.iwes.widgets.resource.widget.textfield.BooleanResourceCheckbox;
+import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfiguration;
+import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfigurationBuilder;
+import de.iwes.widgets.reswidget.scheduleviewer.api.TimeSeriesFilter;
 import de.iwes.widgets.reswidget.scheduleviewer.api.TimeSeriesFilterExtended;
 import de.iwes.widgets.template.DefaultDisplayTemplate;
 
@@ -1132,6 +1135,19 @@ public class OfflineEvaluationControl {
 				ScheduleViewerConfigProvEvalOff.PROVIDER_ID,
 				ScheduleViewerConfigProvEvalOff.getInstance()) {
 			private static final long serialVersionUID = 1L;
+
+			//TODO: There may be cases when the manipulator would be desired. Then this would
+			//have to be made configurable
+			@Override
+			protected ScheduleViewerConfiguration getViewerConfiguration(long startTime, long endTime,
+					List<Collection<TimeSeriesFilter>> programs) {
+				final ScheduleViewerConfiguration viewerConfiguration =
+						ScheduleViewerConfigurationBuilder.newBuilder().setPrograms(programs).
+						setStartTime(startTime).setEndTime(endTime).setShowManipulator(true).
+						setShowIndividualConfigBtn(false).setShowPlotTypeSelector(true).
+						setShowManipulator(false).build();
+					return viewerConfiguration;
+			}
 
 			@Override
 			protected List<TimeSeriesData> getTimeseries(OgemaHttpRequest req) {

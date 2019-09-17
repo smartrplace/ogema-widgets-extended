@@ -56,6 +56,8 @@ import de.iwes.widgets.html.complextable.RowTemplate;
 import de.iwes.widgets.html.form.button.Button;
 import de.iwes.widgets.html.form.checkbox.Checkbox;
 import de.iwes.widgets.html.form.dropdown.TemplateDropdown;
+import de.iwes.widgets.html.form.label.Header;
+import de.iwes.widgets.html.form.label.HeaderData;
 import de.iwes.widgets.html.form.label.Label;
 import de.iwes.widgets.html.multiselect.TemplateMultiselect;
 import de.iwes.widgets.html.plotflot.FlotConfiguration;
@@ -201,7 +203,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected ScheduleManipulator manipulator;
 	protected StaticHeader manipulatorHeader;
 	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
-	protected StaticHeader downloadHeader;
+	protected Header downloadHeader;
 	protected Label optionsLabel;
 	protected Checkbox optionsCheckbox;
 	protected Button triggerIndividualConfigPopupButton;
@@ -369,8 +371,20 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 * @param am
 	 */
 	private void initRow4Downloaddata(WidgetPage<?> page, String id, final ApplicationManager am) {
-		downloadHeader = new StaticHeader(3, "Download data");
-		downloadHeader.addStyle(HtmlStyle.ALIGNED_CENTER);
+		downloadHeader = new Header(page, "downloadHeader", "Download data") {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				if (configuration(req).showCsvDownload || isExpertMode(req)) {
+					setWidgetVisibility(true, req);
+				} else {
+					setWidgetVisibility(false, req);
+				}
+			}
+		};
+		downloadHeader.setDefaultHeaderType(3);
+		//downloadHeader.addStyle(HtmlStyle.ALIGNED_CENTER);
+		downloadHeader.addDefaultStyle(HeaderData.TEXT_ALIGNMENT_CENTERED);
 		this.csvDownload = new ScheduleCsvDownloadExpert<ReadOnlyTimeSeries>(page, id + "_dataDownload", am.getWebAccessManager()) {
 
 			private static final long serialVersionUID = 1L;
@@ -406,7 +420,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		//	return;
 		//}
 
-		this.manipulatorHeader = new StaticHeader(3, "Manipulate schedule");
+		this.manipulatorHeader = new StaticHeader(3, System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.manipulatorheading", "Manipulate schedule"));
 		this.manipulatorHeader.addStyle(HtmlStyle.ALIGNED_CENTER);
 		//ScheduleManipulatorConfiguration smc = configuration.manipulatorConfiguration;
 		//ScheduleManipulatorConfiguration newConfig = new ScheduleManipulatorConfiguration(alert,
@@ -923,7 +937,8 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		}
 
 		list.add(new TablePojo(id, scheduleSelectorLabel, page, this));
-		list.add(new TablePojo(id, dropdownScheduleNameLabel, dropdownScheduleNames, page));
+		if(!Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.hideschedulenametypedropdown"))
+			list.add(new TablePojo(id, dropdownScheduleNameLabel, dropdownScheduleNames, page));
 		list.add(new TablePojo(id, scheduleStartLabel, scheduleStartPicker, page));
 		list.add(new TablePojo(id, scheduleEndLabel, scheduleEndPicker, page));
 
@@ -1303,6 +1318,15 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 
 			private static final long serialVersionUID = -6490863998981034894L;
 
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				if (!Boolean.getBoolean("de.iwes.widgets.reswidget.scheduleviewer.expert.clone.hideSaveButton")) {
+					setWidgetVisibility(true, req);
+				} else {
+					setWidgetVisibility(false, req);
+				}
+			}
+			
 			@Override
 			public void onPOSTComplete(String data, OgemaHttpRequest req) {
 				Integer conditionalTimeSeriesFilterCategoryPreselected = 0;

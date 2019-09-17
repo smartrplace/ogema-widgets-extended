@@ -113,15 +113,14 @@ public class ScheduleViewerBasicApp implements Application {
 		customMenu.addEntry("View ScheduleProvider Overivew", overviewPage);
 		MenuConfiguration mc = page.getMenuConfiguration();
 		mc.setCustomNavigation(customMenu);
+		changeMenuConfig(mc);
 		mc = onlinePage.getMenuConfiguration();
 		mc.setCustomNavigation(customMenu);
+		changeMenuConfig(mc);
 		
 		mc = overviewPage.getMenuConfiguration();
 		mc.setCustomNavigation(customMenu);
-		if(Boolean.getBoolean("org.smartrplace.smarteff.defaultservice.reducetopnavi")) {
-			mc.setLanguageSelectionVisible(false);
-			mc.setNavigationVisible(false);
-		}
+		changeMenuConfig(mc);
 		Boolean testRes = Boolean.getBoolean("org.ogema.apps.createtestresources");
 		if (testRes) {
 			createTestResource();
@@ -131,6 +130,13 @@ public class ScheduleViewerBasicApp implements Application {
 		addScheduleProvider(dummyProvider);
 	
     }	
+
+	protected void changeMenuConfig(MenuConfiguration mc) {
+		if(Boolean.getBoolean("org.smartrplace.smarteff.defaultservice.reducetopnavi")) {
+			mc.setLanguageSelectionVisible(false);
+			mc.setNavigationVisible(false);
+		}
+	}
 
     @Override
     public void stop(AppStopReason reason) {

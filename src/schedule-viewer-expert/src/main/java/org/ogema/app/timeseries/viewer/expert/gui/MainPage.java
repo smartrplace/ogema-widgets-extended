@@ -30,7 +30,8 @@ import de.iwes.widgets.reswidget.scheduleviewer.utils.ScheduleViewerUtil;
 
 public class MainPage {
 
-	private static final String HEADER_TEXT = "Schedule Viewer Standard Configurations";
+	private static final String HEADER_TEXT = System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.header",
+			"Schedule Viewer Standard Configurations");
 	public final static long MAX_UPDATE_INTERVAL = 30000; // do not update values more often than every 30s...
 	public final ScheduleViewerBasicApp scheduleViewerBasicApp;
 
@@ -49,12 +50,16 @@ public class MainPage {
 			private static final long serialVersionUID = -862546046902822922L;
 			@Override
 			public void onGET(OgemaHttpRequest req) {
-				String text = HEADER_TEXT + " ("+getPageParameter(req, page, ScheduleViewerBasicApp.PARAM_PROVIDER_ID)+")";
+				String text;
+				if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.addprovideridtoheader"))
+					text = HEADER_TEXT + " ("+getPageParameter(req, page, ScheduleViewerBasicApp.PARAM_PROVIDER_ID)+")";
+				else
+					text = HEADER_TEXT;
 				setText(text, req);
 			}
 			
 		};
-		header.addDefaultStyle(WidgetData.TEXT_ALIGNMENT_CENTERED);
+		header.addDefaultStyle(WidgetData.TEXT_ALIGNMENT_LEFT);
 		
 		/** TODO: Check if snippet can really be global. Otherwise caching via alreadyAdded will probably not
 		 * work for a new session with a known providerId.*/
