@@ -45,8 +45,6 @@ import de.iwes.widgets.api.widgets.OgemaWidget;
 import de.iwes.widgets.api.widgets.WidgetPage;
 import de.iwes.widgets.api.widgets.dynamics.TriggeredAction;
 import de.iwes.widgets.api.widgets.dynamics.TriggeringAction;
-import de.iwes.widgets.api.widgets.html.HtmlStyle;
-import de.iwes.widgets.api.widgets.html.StaticHeader;
 import de.iwes.widgets.api.widgets.localisation.OgemaLocale;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
 import de.iwes.widgets.html.alert.Alert;
@@ -201,7 +199,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected Button updateButton;
 	protected SchedulePlotFlot schedulePlot; // TODO generic interface
 	protected ScheduleManipulator manipulator;
-	protected StaticHeader manipulatorHeader;
+	protected Header manipulatorHeader;
 	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
 	protected Header downloadHeader;
 	protected Label optionsLabel;
@@ -286,11 +284,14 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		final boolean showProgramSelector = true; //(config.programs != null);
 		final boolean showFilterSelector = true;  //(config.filters != null);
 
-		this.scheduleSelectorLabel = new Label(page, id + "_scheduleSelectorLabel", "Select schedule");
+		this.scheduleSelectorLabel = new Label(page, id + "_scheduleSelectorLabel",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.selectschedulelabel", "Select schedule"));
 		this.dropdownScheduleNameLabel = new Label(page, id + "_scheduleNameLabel", "Change schedule-naming");
 		this.updateLabel = new Label(page, id + "_updateLabel", "");
-		this.scheduleStartLabel = new Label(page, id + "_scheduleStartLabel", "Select start time");
-		this.scheduleEndLabel = new Label(page, id + "_scheduleEndLabel", "Select end time");
+		this.scheduleStartLabel = new Label(page, id + "_scheduleStartLabel",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.selectstarttimelabel", "Select start time"));
+		this.scheduleEndLabel = new Label(page, id + "_scheduleEndLabel",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.selectendtimelabel", "Select end time"));
 
 		this.programSelectorLabels = new ArrayList<>();
 		this.programSelectors = new ArrayList<>();
@@ -420,8 +421,22 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		//	return;
 		//}
 
-		this.manipulatorHeader = new StaticHeader(3, System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.manipulatorheading", "Manipulate schedule"));
-		this.manipulatorHeader.addStyle(HtmlStyle.ALIGNED_CENTER);
+		this.manipulatorHeader =  new Header(page, "manipulatorHeader",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.manipulatorheading", "Manipulate schedule")) {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				if (configuration(req).showManipulator || isExpertMode(req)) {
+					setWidgetVisibility(true, req);
+				} else {
+					setWidgetVisibility(false, req);
+				}
+			}
+		};
+		manipulatorHeader.setDefaultHeaderType(3);
+		manipulatorHeader.addDefaultStyle(HeaderData.TEXT_ALIGNMENT_CENTERED);
+		//new StaticHeader(3, System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.manipulatorheading", "Manipulate schedule"));
+		//this.manipulatorHeader.addStyle(HtmlStyle.ALIGNED_CENTER);
 		//ScheduleManipulatorConfiguration smc = configuration.manipulatorConfiguration;
 		//ScheduleManipulatorConfiguration newConfig = new ScheduleManipulatorConfiguration(alert,
 		//		smc.isShowInterpolationMode(), smc.isShowQuality());
@@ -510,7 +525,8 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 * @param id
 	 */
 	private void initRow1Options(WidgetPage<?> page, String id) {
-		this.optionsLabel = new Label(page, id + "_fixIntervalLabel", "Options") {
+		this.optionsLabel = new Label(page, id + "_fixIntervalLabel",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.optionslabel", "Options")) {
 
 			private static final long serialVersionUID = -1032652251225301073L;
 
@@ -560,8 +576,10 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 			}
 		};
 		schedulePlot.getDefaultConfiguration().doScale(true); // can be overwritten in app
-
-		updateButton = new Button(page, id + "_updateButton", "Apply") {
+		schedulePlot.setDefaultHeight("300px");
+		
+		updateButton = new Button(page, id + "_updateButton",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.applylabel", "Apply")) {
 
 			private static final long serialVersionUID = -2768928390239131942L;
 
@@ -652,7 +670,8 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 
 
 	private void initRow2NoOfDataPoints(WidgetPage<?> page, String id, final ApplicationManager am) {
-		this.nrDataPointsLabel = new Label(page, id + "_nrDataPointsLabel", "Number of data points") {
+		this.nrDataPointsLabel = new Label(page, id + "_nrDataPointsLabel",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.nrdatapointslabel", "Number of data points")) {
 
 			private static final long serialVersionUID = -793624698242225307L;
 
@@ -688,6 +707,17 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 					startTime = scheduleStartPicker.getDateLong(req);
 					endTime = scheduleEndPicker.getDateLong(req);
 				} catch (Exception e) {
+				}
+				if(schedules.isEmpty()) {
+					final SessionConfiguration sessionConfig = getSessionConfiguration(req);
+					//from scheduleSelector(req).overwriteScheduleSelectorWithProvider(req, sessionConfig);
+					List<ReadOnlyTimeSeries> selectedTimeSeries = sessionConfig.timeSeriesSelected();
+					if (selectedTimeSeries.size() > 10) {
+						schedules = selectedTimeSeries.subList(0, 9);
+					} else {
+						schedules = selectedTimeSeries;
+					}
+					//schedules = scheduleSelector(req).getSelectedItems(req);
 				}
 				if (schedules == null || schedules.isEmpty() || startTime > endTime) {
 					setText("0", req);
