@@ -107,10 +107,12 @@ public class ScheduleSelector extends TemplateMultiselect<ReadOnlyTimeSeries> {
 		@Override
 		public void onGET(OgemaHttpRequest req) {
 			if (getData(req).selectOrDeselect) {
-				setText("Select all Schedules  ", req);
+				setText(System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.selectAllSchedlabel",
+						"Select all Schedules  "), req);
 				setCss("btn btn-info", req);
 			} else {
-				setText("Deselect all Schedules", req);
+				setText(System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.deselectAllSchedlabel",
+						"Deselect all Schedules"), req);
 				setCss("btn btn-danger", req);
 			}
 		}

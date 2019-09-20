@@ -211,8 +211,10 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	public static final String PARAM_SESSION_CONFIG_ID = "configId";
 	public static final String PARAM_EXPERT_MODE = "expertMode";
 	public static final String PARAM_PROVIDER_ID = "providerId";
-	public final static String FIX_INTERVAL_OPT = "Fix interval on schedule switch";
-	private final static String SHOW_EMPTY_OPT = "Show empty schedules";
+	public final static String FIX_INTERVAL_OPT = System.getProperty(
+			"org.ogema.app.timeseries.viewer.expert.gui.fixintervalonschedswitchlabel", "Fix interval on schedule switch");
+	private final static String SHOW_EMPTY_OPT = System.getProperty(
+			"org.ogema.app.timeseries.viewer.expert.gui.showemptyschedslabel", "Show empty schedules");
 	public static final String SHORT_NAME = "Shortname";
 	public static final String LONG_NAME = "Longname (Devicetype/name, Sensor/Actortype, Room)";
 	public static final String LOCATION = "Locaton (Path)";
