@@ -1,6 +1,7 @@
 package com.iee.app.evaluationofflinecontrol.util;
 
 import java.util.ArrayList;
+import java.util.Collection;
 import java.util.List;
 
 import org.ogema.core.application.ApplicationManager;
@@ -82,7 +83,7 @@ public class ExportBulkData {
 	 * @param input list to clean input data rows from not specified in inputsToUse
 	 * @param inputsToUse Strings to search for in timeseries labels
 	 */
-	public static void cleanList(List<TimeSeriesData> input, List<String> inputsToUse) {
+	public static void cleanList(List<TimeSeriesData> input, Collection<String> inputsToUse) {
 		List<TimeSeriesData> toRemove = new ArrayList<>();
 		for (TimeSeriesData tsdBase : input) {
 			String id = tsdBase.label(null);

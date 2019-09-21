@@ -58,11 +58,16 @@ import de.iwes.widgets.html.form.label.Header;
 import de.iwes.widgets.html.form.label.HeaderData;
 import de.iwes.widgets.html.form.label.Label;
 import de.iwes.widgets.html.multiselect.TemplateMultiselect;
+import de.iwes.widgets.html.plot.api.Plot2DConfiguration;
+import de.iwes.widgets.html.plot.api.PlotType;
 import de.iwes.widgets.html.plotflot.FlotConfiguration;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulator;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulatorConfiguration;
+import de.iwes.widgets.reswidget.scheduleplot.api.ScheduleData;
+import de.iwes.widgets.reswidget.scheduleplot.api.TimeSeriesPlot;
 import de.iwes.widgets.reswidget.scheduleplot.flot.ScheduleDataFlot;
 import de.iwes.widgets.reswidget.scheduleplot.flot.SchedulePlotFlot;
+import de.iwes.widgets.reswidget.scheduleplot.plotlyjs.SchedulePlotlyjs;
 import de.iwes.widgets.reswidget.scheduleviewer.ResourceScheduleViewer;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ConditionalTimeSeriesFilter;
 import de.iwes.widgets.reswidget.scheduleviewer.api.SchedulePresentationData;
@@ -197,7 +202,8 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected final ViewerDatepicker scheduleEndPicker;
 	protected Label nrDataPoints;
 	protected Button updateButton;
-	protected SchedulePlotFlot schedulePlot; // TODO generic interface
+	//protected SchedulePlotFlot schedulePlot; // TODO generic interface
+	protected SchedulePlotlyjs schedulePlot; // TODO generic interface
 	protected ScheduleManipulator manipulator;
 	protected Header manipulatorHeader;
 	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
@@ -566,7 +572,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	private void initSchedulePlot(WidgetPage<?> page, String id, final ApplicationManager am,
 //			ScheduleViewerConfiguration config,
 			final boolean showCheckboxes) {
-		schedulePlot = new SchedulePlotFlot(page, id + "_schedulePlot", false, STANDARD_BUFFER_WINDOW) { //config.bufferWindow) {
+		schedulePlot = new SchedulePlotlyjs(page, id + "_schedulePlot", false, STANDARD_BUFFER_WINDOW) { //config.bufferWindow) {
 
 			private static final long serialVersionUID = -8867287385992011041L;
 
@@ -578,7 +584,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 			}
 		};
 		schedulePlot.getDefaultConfiguration().doScale(true); // can be overwritten in app
-		schedulePlot.setDefaultHeight("300px");
+		schedulePlot.setDefaultHeight("700px");
 		
 		updateButton = new Button(page, id + "_updateButton",
 				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.applylabel", "Apply")) {
@@ -599,9 +605,12 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 * @param req
 	 * @param showCheckboxes
 	 */
-	private void updatePlot(SchedulePlotFlot plot, final ApplicationManager am, OgemaHttpRequest req,
+	private void updatePlot(TimeSeriesPlot<?, ?, ?> plot, final ApplicationManager am, OgemaHttpRequest req,
 			boolean showCheckboxes) {
-
+		final SessionConfiguration cfg = getSessionConfiguration(req);
+		// TODO set line type
+		getPlotConfiguration(req).setPlotType(PlotType.LINE);
+		
 		final List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
 		long startTime = scheduleStartPicker.getDateLong(req);
 		long endTime = scheduleEndPicker.getDateLong(req);
@@ -646,7 +655,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 			String label = getLabelForPlot(req, sched);
 			schedules.put(label, new DefaultSchedulePresentationData(sched, type, label));
 		}
-		ScheduleDataFlot data = plot.getScheduleData(req);
+		ScheduleData<?> data = plot.getScheduleData(req);
 		data.setSchedules(schedules);
 	}
 
@@ -1222,7 +1231,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	}*/
 
 	@Override
-	public final SchedulePlotFlot getSchedulePlot() {
+	public final SchedulePlotlyjs getSchedulePlot() {
 		return schedulePlot;
 	}
 
@@ -1304,7 +1313,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 * @return
 	 */
 	@Override
-	public FlotConfiguration getDefaultPlotConfiguration() {
+	public Plot2DConfiguration getDefaultPlotConfiguration() {
 		return schedulePlot.getDefaultConfiguration();
 	}
 
@@ -1315,7 +1324,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 * @return
 	 */
 	@Override
-	public FlotConfiguration getPlotConfiguration(OgemaHttpRequest req) {
+	public Plot2DConfiguration getPlotConfiguration(OgemaHttpRequest req) {
 		return schedulePlot.getConfiguration(req);
 	}
 
