@@ -109,7 +109,12 @@ public class ViewerDatepicker extends Datepicker {
 			return;
 		}
 
-		if (schedView.configuration(req).showOptionsSwitch && schedView.optionsCheckbox.getCheckboxList(req).get(ScheduleViewerExtended.FIX_INTERVAL_OPT)) {
+		boolean fixInterval;
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {
+			fixInterval = schedView.configuration(req).showOptionsSwitch && schedView.multiSelectOptions.getSelectedItems(req).contains(ScheduleViewerExtended.FIX_INTERVAL_OPT);
+		} else
+			fixInterval = schedView.configuration(req).showOptionsSwitch && schedView.optionsCheckbox.getCheckboxList(req).get(ScheduleViewerExtended.FIX_INTERVAL_OPT);
+		if (fixInterval) {
 			return;
 		}
 		

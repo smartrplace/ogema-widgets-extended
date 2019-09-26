@@ -19,6 +19,7 @@ import de.iwes.widgets.api.extended.OgemaWidgetBase;
 import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
 import de.iwes.widgets.api.widgets.OgemaWidget;
 import de.iwes.widgets.api.widgets.WidgetPage;
+import de.iwes.widgets.api.widgets.html.HtmlItem;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
 import de.iwes.widgets.html.form.label.Label;
 import de.iwes.widgets.reswidget.scheduleviewer.clone.PageSnippetSelector;
@@ -31,7 +32,7 @@ import de.iwes.widgets.reswidget.scheduleviewer.clone.ScheduleViewerExtended;
  *
  * @param <T>
  */
-public class TablePojo<T extends OgemaWidget> { 
+public class TablePojo { //<T extends OgemaWidget> { 
 
 	private final Label label;
 	private final String id;
@@ -42,6 +43,11 @@ public class TablePojo<T extends OgemaWidget> {
 		this(id, label, widget, null, page);
 	}
 	
+	public TablePojo(String id, Label label, HtmlItem widget, OgemaWidgetBase<?> widgetOptional, WidgetPage<?> page){		
+		this.label = label;	
+		this.id= "id_"+String.format("%04d", TablePojo.COUNT++) +"_table_"+id;
+		this.snippet = initSnippet(page, widget, widgetOptional);
+	}
 	public TablePojo(String id, Label label, OgemaWidgetBase<?> widget, OgemaWidgetBase<?> widgetOptional, WidgetPage<?> page){		
 		this.label = label;	
 		this.id= "id_"+String.format("%04d", TablePojo.COUNT++) +"_table_"+id;
@@ -67,6 +73,16 @@ public class TablePojo<T extends OgemaWidget> {
 		return snippet;
 	}
 
+	private PageSnippet initSnippet(WidgetPage<?> page, HtmlItem w1, OgemaWidget w2) {
+		PageSnippet snippet = new PageSnippet(page, id, true);
+		if(w1 != null) {
+			snippet.append(w1, null);
+		}
+		if(w2 != null) {
+			snippet.append(w2, null);
+		}
+		return snippet;		
+	}
 	private PageSnippet initSnippet(WidgetPage<?> page, OgemaWidget w1, OgemaWidget w2) {
 		PageSnippet snippet = new PageSnippet(page, id, true);
 		if(w1 != null) {

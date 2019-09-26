@@ -38,6 +38,7 @@ import org.ogema.core.model.simple.SingleValueResource;
 import org.ogema.core.model.simple.StringResource;
 import org.ogema.core.recordeddata.RecordedData;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
+import org.ogema.util.extended.eval.widget.MultiSelectByButtons;
 import org.ogema.widgets.reswidget.schedulecsvdownload.expert.ScheduleCsvDownloadExpert;
 
 import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
@@ -52,6 +53,7 @@ import de.iwes.widgets.html.calendar.datepicker.Datepicker;
 import de.iwes.widgets.html.complextable.DynamicTable;
 import de.iwes.widgets.html.complextable.RowTemplate;
 import de.iwes.widgets.html.form.button.Button;
+import de.iwes.widgets.html.form.button.ButtonData;
 import de.iwes.widgets.html.form.checkbox.Checkbox;
 import de.iwes.widgets.html.form.dropdown.TemplateDropdown;
 import de.iwes.widgets.html.form.label.Header;
@@ -60,12 +62,11 @@ import de.iwes.widgets.html.form.label.Label;
 import de.iwes.widgets.html.multiselect.TemplateMultiselect;
 import de.iwes.widgets.html.plot.api.Plot2DConfiguration;
 import de.iwes.widgets.html.plot.api.PlotType;
-import de.iwes.widgets.html.plotflot.FlotConfiguration;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulator;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulatorConfiguration;
 import de.iwes.widgets.reswidget.scheduleplot.api.ScheduleData;
 import de.iwes.widgets.reswidget.scheduleplot.api.TimeSeriesPlot;
-import de.iwes.widgets.reswidget.scheduleplot.flot.ScheduleDataFlot;
+import de.iwes.widgets.reswidget.scheduleplot.container.PlotTypeSelector;
 import de.iwes.widgets.reswidget.scheduleplot.flot.SchedulePlotFlot;
 import de.iwes.widgets.reswidget.scheduleplot.plotlyjs.SchedulePlotlyjs;
 import de.iwes.widgets.reswidget.scheduleviewer.ResourceScheduleViewer;
@@ -203,15 +204,21 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected Label nrDataPoints;
 	protected Button updateButton;
 	//protected SchedulePlotFlot schedulePlot; // TODO generic interface
-	protected SchedulePlotlyjs schedulePlot; // TODO generic interface
+	//protected SchedulePlotlyjs schedulePlot; // TODO generic interface
+	protected TimeSeriesPlot<?,?,?> schedulePlot; // TODO generic interface
 	protected ScheduleManipulator manipulator;
 	protected Header manipulatorHeader;
 	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
 	protected Header downloadHeader;
 	protected Label optionsLabel;
 	protected Checkbox optionsCheckbox;
+	protected MultiSelectByButtons multiSelectOptions;
 	protected Button triggerIndividualConfigPopupButton;
 	protected ConfigPopup individualConfigPopup;
+	
+	protected TemplateDropdown<PlotType> lineTypeSelector;
+	protected Label lineTypeLabel;
+
 	protected final Button saveConfigurationButton;
 	protected final ChangeScheduleNameDropdown dropdownScheduleNames;
 	public static final String PARAM_SESSION_CONFIG_ID = "configId";
@@ -321,6 +328,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		initRow4Downloaddata(page, id, am);
 		initRow5ManipulateSchedule(page);
 		initRow678SelectIntervall(page, id);
+		initRow9SelectLineType(page, id);
 
 		saveConfigurationButton = getSaveConfigurationButton(id);
 		//selectAllSchedulesButton = new SelectAllButton(page, id + "_selectScheduleButton");
@@ -547,42 +555,95 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 				}
 			}
 		};
-		this.optionsCheckbox = new Checkbox(page, id + "_optionsCheckbox") {
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {
+			this.optionsCheckbox = null;
+			//init of MultiSelectbyButtons is done below. This will always be visible
+		} else {
+			this.optionsCheckbox = new Checkbox(page, id + "_optionsCheckbox") {
+	
+				private static final long serialVersionUID = 685168574654L;
+	
+				@Override
+				public void onGET(OgemaHttpRequest req) {
+					if (configuration(req).showOptionsSwitch || isExpertMode(req)) {
+						setWidgetVisibility(true, req);
+					} else {
+						setWidgetVisibility(false, req);
+					}
+				}
+			};
+		}
+		Map<String, Boolean> opts = new LinkedHashMap<String, Boolean>();
+		opts.put(FIX_INTERVAL_OPT, true); //TODO: set this depending on session
+		opts.put(SHOW_EMPTY_OPT, true);
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {
+			List<String> items = new ArrayList<>(opts.keySet());
+			multiSelectOptions = new MultiSelectByButtons(items, "msroom", page,
+					ButtonData.BOOTSTRAP_GREEN, ButtonData.BOOTSTRAP_LIGHTGREY);
+			multiSelectOptions.setDefaultSelectedItemd(items);
+		} else
+			optionsCheckbox.setDefaultList(opts);
+	}
 
-			private static final long serialVersionUID = 685168574654L;
-
+	private void initRow9SelectLineType(WidgetPage<?> page, String id) {
+		this.lineTypeLabel = new Label(page, id + "_lineTypeLabel",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.selectlinetypelabel", "Select the line type")) {
+			private static final long serialVersionUID = 1L;
+			
 			@Override
 			public void onGET(OgemaHttpRequest req) {
-				if (configuration(req).showOptionsSwitch || isExpertMode(req)) {
+				if (configuration(req).isShowPlotTypeSelector() || isExpertMode(req)) {
+					setWidgetVisibility(true, req);
+				} else {
+					setWidgetVisibility(false, req);
+				}
+			}			
+		};
+		this.lineTypeSelector = new PlotTypeSelector(page, id + "_lineTypeSelector", schedulePlot) {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				if (configuration(req).isShowPlotTypeSelector() || isExpertMode(req)) {
 					setWidgetVisibility(true, req);
 				} else {
 					setWidgetVisibility(false, req);
 				}
 			}
 		};
-		Map<String, Boolean> opts = new LinkedHashMap<String, Boolean>();
-		opts.put(FIX_INTERVAL_OPT, true); //TODO: set this depending on session
-		opts.put(SHOW_EMPTY_OPT, true);
-		optionsCheckbox.setDefaultList(opts);
+		lineTypeSelector.selectDefaultItem(PlotType.LINE);
 	}
-
+	
 	/**
 	 * Initializes the SchedulePlot and the Apply-Button
 	 */
 	private void initSchedulePlot(WidgetPage<?> page, String id, final ApplicationManager am,
 //			ScheduleViewerConfiguration config,
 			final boolean showCheckboxes) {
-		schedulePlot = new SchedulePlotlyjs(page, id + "_schedulePlot", false, STANDARD_BUFFER_WINDOW) { //config.bufferWindow) {
-
-			private static final long serialVersionUID = -8867287385992011041L;
-
-			@Override
-			public void onGET(OgemaHttpRequest req) {
-				if (getSessionConfiguration(req) != null && getSessionConfiguration(req).generateGraphImmediately()) {
-					updatePlot(this, am, req, showCheckboxes);
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.useplotlyjs")) {
+			schedulePlot = new SchedulePlotlyjs(page, id + "_schedulePlot", false, STANDARD_BUFFER_WINDOW) { //config.bufferWindow) {
+	
+				private static final long serialVersionUID = -8867287385992011041L;
+	
+				@Override
+				public void onGET(OgemaHttpRequest req) {
+					if (getSessionConfiguration(req) != null && getSessionConfiguration(req).generateGraphImmediately()) {
+						updatePlot(this, am, req, showCheckboxes);
+					}
 				}
-			}
-		};
+			};
+		} else {
+			schedulePlot = new SchedulePlotFlot(page, id + "_schedulePlot", false, STANDARD_BUFFER_WINDOW) { //config.bufferWindow) {
+				
+				private static final long serialVersionUID = -8867287385992011041L;
+	
+				@Override
+				public void onGET(OgemaHttpRequest req) {
+					if (getSessionConfiguration(req) != null && getSessionConfiguration(req).generateGraphImmediately()) {
+						updatePlot(this, am, req, showCheckboxes);
+					}
+				}
+			};			
+		}
 		schedulePlot.getDefaultConfiguration().doScale(true); // can be overwritten in app
 		schedulePlot.setDefaultHeight("700px");
 		
@@ -609,13 +670,23 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 			boolean showCheckboxes) {
 		final SessionConfiguration cfg = getSessionConfiguration(req);
 		// TODO set line type
-		getPlotConfiguration(req).setPlotType(PlotType.LINE);
+		if(sessionConfig(req).viewerConfiguration().isShowPlotTypeSelector()) {
+			PlotType plotType = this.lineTypeSelector.getSelectedItem(req);
+			getPlotConfiguration(req).setPlotType(plotType);
+		}
+		else if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.plotlines"))
+			getPlotConfiguration(req).setPlotType(PlotType.LINE);
+		//else: default is dots
 		
 		final List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
 		long startTime = scheduleStartPicker.getDateLong(req);
 		long endTime = scheduleEndPicker.getDateLong(req);
 
-		boolean showEmpty = showCheckboxes ? optionsCheckbox.getCheckboxList(req).get(SHOW_EMPTY_OPT) : true;
+		boolean showEmpty;
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {
+			showEmpty = showCheckboxes ? multiSelectOptions.getSelectedItems(req).contains(SHOW_EMPTY_OPT) : true;
+		} else
+			showEmpty = showCheckboxes ? optionsCheckbox.getCheckboxList(req).get(SHOW_EMPTY_OPT) : true;
 		if (startTime > endTime)
 			startTime = endTime;
 		plot.setInterval(startTime, endTime, req);
@@ -973,7 +1044,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		}
 		if ((showFilterSelector || isExpert) && filterSelectors != null) {
 			for (int i = 0; i < filterSelectors.size(); i++) {
-				list.add(new TablePojo<>(id, filterSelectorLabels.get(i), filterSelectors.get(i), page));
+				list.add(new TablePojo(id, filterSelectorLabels.get(i), filterSelectors.get(i), page));
 			}
 		}
 
@@ -992,8 +1063,12 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		//}
 
 		//if (configuration.showOptionsSwitch || isExpert) {
-		list.add(new TablePojo(id, optionsLabel, optionsCheckbox, page));
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons"))
+			list.add(new TablePojo(id, optionsLabel, multiSelectOptions.getStaticTable(), null, page));
+		else
+			list.add(new TablePojo(id, optionsLabel, optionsCheckbox, page));
 		//}
+		list.add(new TablePojo(id, lineTypeLabel, lineTypeSelector, page));
 
 		//if (configuration.showIndividualConfigBtn || isExpert) {
 		//	list.add(new TablePojo(id, triggerIndividualConfigLabel, triggerIndividualConfigPopupButton, page));
@@ -1231,7 +1306,8 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	}*/
 
 	@Override
-	public final SchedulePlotlyjs getSchedulePlot() {
+	//public final SchedulePlotlyjs getSchedulePlot() {
+	public final TimeSeriesPlot<?,?,?> getSchedulePlot() {
 		return schedulePlot;
 	}
 

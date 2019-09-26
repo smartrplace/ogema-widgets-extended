@@ -21,7 +21,10 @@ import org.ogema.core.application.ApplicationManager;
 import de.iwes.widgets.api.extended.WidgetData;
 import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
 import de.iwes.widgets.api.widgets.WidgetPage;
+import de.iwes.widgets.api.widgets.html.StaticTable;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
+import de.iwes.widgets.html.form.button.ButtonData;
+import de.iwes.widgets.html.form.button.WindowCloseButton;
 import de.iwes.widgets.html.form.label.Header;
 import de.iwes.widgets.reswidget.scheduleviewer.clone.ScheduleViewerExtended;
 import de.iwes.widgets.reswidget.scheduleviewer.utils.ScheduleViewerUtil;
@@ -103,7 +106,15 @@ public class MainPage {
 		};
 		BasicScheduleViewBuilder builder = new BasicScheduleViewBuilder(page, app);
 		
-		snippet.append(header, null);
+		StaticTable headerTable = new StaticTable(1, 2);
+		headerTable.setContent(0, 0, header);
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.addclosetabbutton")) {
+			WindowCloseButton closeTabButton = new WindowCloseButton(page, "closeTabButtonBuilding", "Fertig");
+			closeTabButton.addDefaultStyle(ButtonData.BOOTSTRAP_RED);
+			headerTable.setContent(0, 1, closeTabButton);
+		}
+		//snippet.append(header, null);
+		snippet.append(headerTable, null);
 		snippet.append(builder.getScheduleViewer(), null);
 		page.append(snippet);
 		page.showOverlay(true);

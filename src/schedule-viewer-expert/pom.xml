@@ -64,7 +64,8 @@
 		</dependency> -->
 		<dependency>
 			<groupId>org.ogema.widgets</groupId>
-			<artifactId>widget-extended</artifactId>
+			<artifactId>widget-collection</artifactId>
+			<version>2.2.1-SNAPSHOT</version>
 		</dependency>
 		<dependency>
 			<groupId>org.ogema.widgets</groupId>
