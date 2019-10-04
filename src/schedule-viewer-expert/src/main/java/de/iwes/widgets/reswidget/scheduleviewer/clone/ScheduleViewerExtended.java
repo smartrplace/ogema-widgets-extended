@@ -40,6 +40,7 @@ import org.ogema.core.recordeddata.RecordedData;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
 import org.ogema.util.extended.eval.widget.MultiSelectByButtons;
 import org.ogema.widgets.reswidget.schedulecsvdownload.expert.ScheduleCsvDownloadExpert;
+import org.ogema.widgets.reswidget.scheduleviewer.api.expert.ext.ScheduleViewerConfigurationExpert;
 
 import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
 import de.iwes.widgets.api.widgets.OgemaWidget;
@@ -205,7 +206,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected Button updateButton;
 	//protected SchedulePlotFlot schedulePlot; // TODO generic interface
 	//protected SchedulePlotlyjs schedulePlot; // TODO generic interface
-	protected TimeSeriesPlot<?,?,?> schedulePlot; // TODO generic interface
+	protected TimeSeriesPlot<?,?,?> schedulePlot;
 	protected ScheduleManipulator manipulator;
 	protected Header manipulatorHeader;
 	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
@@ -670,13 +671,19 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 			boolean showCheckboxes) {
 		final SessionConfiguration cfg = getSessionConfiguration(req);
 		// TODO set line type
-		if(sessionConfig(req).viewerConfiguration().isShowPlotTypeSelector()) {
+		ScheduleViewerConfiguration viewerConfig = sessionConfig(req).viewerConfiguration();
+		if(viewerConfig.isShowPlotTypeSelector()) {
 			PlotType plotType = this.lineTypeSelector.getSelectedItem(req);
 			getPlotConfiguration(req).setPlotType(plotType);
 		}
 		else if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.plotlines"))
 			getPlotConfiguration(req).setPlotType(PlotType.LINE);
 		//else: default is dots
+		if(viewerConfig instanceof ScheduleViewerConfigurationExpert) {
+			ScheduleViewerConfigurationExpert exp = (ScheduleViewerConfigurationExpert) viewerConfig;
+			if(!exp.doScale)
+				getPlotConfiguration(req).doScale(false);
+		}
 		
 		final List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
 		long startTime = scheduleStartPicker.getDateLong(req);
