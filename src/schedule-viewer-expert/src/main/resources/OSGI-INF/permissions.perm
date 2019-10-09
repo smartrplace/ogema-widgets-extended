@@ -28,6 +28,15 @@ ${permissions;packages;services;capabilities}
 (org.osgi.framework.PackagePermission "org.ogema.recordeddata" "import")
 (java.util.PropertyPermission "org.ogema.apps.createtestresources" "read")
 (java.util.PropertyPermission "org.ogema.reswidget.eval.scheduleviewer.expert.selectOffered.donot" "read")
+(java.util.PropertyPermission "org.ogema.app.timeseries.viewer.expert.gui.header" "read")
+(java.util.PropertyPermission "org.ogema.app.timeseries.viewer.expert.gui.addprovideridtoheader" "read")
+(java.util.PropertyPermission "org.ogema.app.timeseries.viewer.expert.gui.selectAllSchedlabel" "read")
+(java.util.PropertyPermission "org.ogema.app.timeseries.viewer.expert.gui.deselectAllSchedlabel" "read")
+(java.util.PropertyPermission "org.ogema.app.timeseries.viewer.expert.gui.*" "read")
+(java.util.PropertyPermission "org.smartrplace.smarteff.defaultservice.reducetopnavi" "read")
+(java.util.PropertyPermission "de.iwes.widgets.reswidget.scheduleviewer.expert.clone.hideSaveButton" "read")
+#(java.util.PropertyPermission "" "read")
+#(java.util.PropertyPermission "" "read")
 
 # resource permissions
 (org.ogema.accesscontrol.ResourcePermission "type=*" "read")
