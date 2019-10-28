@@ -24,6 +24,7 @@ import de.iwes.widgets.api.widgets.WidgetPage;
 import de.iwes.widgets.api.widgets.html.StaticTable;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
 import de.iwes.widgets.html.form.button.ButtonData;
+import de.iwes.widgets.html.form.button.RedirectButton;
 import de.iwes.widgets.html.form.button.WindowCloseButton;
 import de.iwes.widgets.html.form.label.Header;
 import de.iwes.widgets.reswidget.scheduleviewer.clone.ScheduleViewerExtended;
@@ -106,12 +107,17 @@ public class MainPage {
 		};
 		BasicScheduleViewBuilder builder = new BasicScheduleViewBuilder(page, app);
 		
-		StaticTable headerTable = new StaticTable(1, 2);
+		StaticTable headerTable = new StaticTable(1, 3);
 		headerTable.setContent(0, 0, header);
 		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.addclosetabbutton")) {
 			WindowCloseButton closeTabButton = new WindowCloseButton(page, "closeTabButtonBuilding", "Fertig");
 			closeTabButton.addDefaultStyle(ButtonData.BOOTSTRAP_RED);
 			headerTable.setContent(0, 1, closeTabButton);
+		}
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.addalarmpagebutton")) {
+			RedirectButton messageButton = new RedirectButton(page, "messageButton", "Alarme", "/de/iwes/ogema/apps/message/reader/index.html");
+			messageButton.setDefaultOpenInNewTab(false);
+			headerTable.setContent(0, 2, messageButton);
 		}
 		//snippet.append(header, null);
 		snippet.append(headerTable, null);
