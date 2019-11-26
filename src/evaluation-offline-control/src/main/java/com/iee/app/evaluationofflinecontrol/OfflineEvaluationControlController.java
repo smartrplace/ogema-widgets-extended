@@ -106,15 +106,17 @@ public class OfflineEvaluationControlController {
 		KPIMessageDefinitionProvider messageProvider;
 	}
 	protected final Map<String, MessageProviderData> messageProviders = new HashMap<>();
+	private final boolean isCustomSubInstanceController;
 	
     public OfflineEvaluationControlController(ApplicationManager appMan, OfflineEvalServiceAccessBase evaluationOCApp, GatewayDataExportI gatewayDataExport,
-    		PageConfig pageConfig) {
+    		PageConfig pageConfig, boolean isCustomSubInstanceController) {
 		this.appMan = appMan;
 		this.log = appMan.getLogger();
 		//this.advAcc = appMan.getResourcePatternAccess();
 		this.serviceAccess = evaluationOCApp;
 		this.gatewayDataExport = gatewayDataExport;
         this.multiKPIViewConfig = pageConfig;
+        this.isCustomSubInstanceController = isCustomSubInstanceController;
 		initConfigurationResource();
         initDemands();
 	}
@@ -371,7 +373,7 @@ public class OfflineEvaluationControlController {
 			KPIMessageDefinitionProvider mprov = sourceEval.getMessageProvider(kpiPageConfig.messageProviderId().getValue());
 			if(mprov == null) return;
 			messageProviders.put(kpiPageConfig.pageId().getValue(), new MessageProviderData(page, mprov));
-			if(autoTimerMessaging == null) autoTimerMessaging = new AutoQueueTimerMessaging(appMan);
+			if(autoTimerMessaging == null && (!isCustomSubInstanceController )) autoTimerMessaging = new AutoQueueTimerMessaging(appMan);
 		}
 	}
 

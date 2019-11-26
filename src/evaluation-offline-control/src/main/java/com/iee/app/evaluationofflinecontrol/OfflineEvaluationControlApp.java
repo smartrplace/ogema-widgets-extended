@@ -146,7 +146,7 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
 
         // 
 		guiService.getMessagingService().registerMessagingApp(appMan.getAppID(), "Evaluation Control");
-        controller = new OfflineEvaluationControlController(appMan, this, gatewayDataExport, null);
+        controller = new OfflineEvaluationControlController(appMan, this, gatewayDataExport, null, false);
 		
 		//register a web page with dynamically generated HTML
 		widgetApp = guiService.createWidgetApp(urlPath, appManager);
