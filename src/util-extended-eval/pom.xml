@@ -17,19 +17,6 @@
 	<name>Offline Evaluation Util bundles</name>
     <packaging>bundle</packaging>
      
-     <!-- <repositories>
-		<repository>
-			<releases />
-			<snapshots>
-				<enabled>false</enabled>
-			</snapshots>
-			<id>ogema-releases</id>
-			<name>ogema-releases</name>
-			<url>https://www.ogema-source.net/artifactory/libs-release</url>
-		</repository>
-	</repositories>
-	 -->
-    
     <build>
         <plugins>
             <plugin>
