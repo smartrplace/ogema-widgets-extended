@@ -26,7 +26,7 @@ public class MultiSelectByButtons extends HtmlItem {
 	
 	public MultiSelectByButtons(List<String> items, String pid, WidgetPage<?> page) {
 		this(items, pid, page, ButtonData.BOOTSTRAP_GREEN,
-				ButtonData.BOOTSTRAP_LIGHT_BLUE); //use ButtonData.BOOTSTRAP_LIGHTGREY when dependency is availabel
+				ButtonData.BOOTSTRAP_LIGHTGREY); //use ButtonData.BOOTSTRAP_LIGHTGREY when dependency is availabel
 	}
 	public MultiSelectByButtons(List<String> items, String pid, WidgetPage<?> page,
 			WidgetStyle<Button> selectedColor,
@@ -90,7 +90,7 @@ public class MultiSelectByButtons extends HtmlItem {
 			but.setText(" "+item, req);
 	}
 
-	public void setDefaultSelectedItemd(List<String> items) {
+	public void setDefaultSelectedItems(List<String> items) {
 		defaultSelectedItems = items;
 		for(Entry<String, Button> but: buttons.entrySet()) {
 			boolean status = isDefaultSelected(but.getKey());

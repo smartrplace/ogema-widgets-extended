@@ -75,8 +75,8 @@ public class ScheduleCsvDownloadExpert<T extends ReadOnlyTimeSeries> extends Sch
 		super(page, id, wam, alert, showUserInput, startPicker, endPicker);
 	}
 	
-	@Deprecated //remove as soon as new release of widget-experimental is available
-	public static final char[] ILLEGAL_CHARACTERS = { '/', '\n', '\r', '\t', '\0', '\f', '`', '?', '*', '\\', '<', '>', '|', '\"', ':' };
+	//@Deprecated //remove as soon as new release of widget-experimental is available
+	//public static final char[] ILLEGAL_CHARACTERS = { '/', '\n', '\r', '\t', '\0', '\f', '`', '?', '*', '\\', '<', '>', '|', '\"', ':' };
 	/**
 	 * 
 	 * @param start
@@ -162,7 +162,7 @@ public class ScheduleCsvDownloadExpert<T extends ReadOnlyTimeSeries> extends Sch
 	 * @param locale may be null
 	 * @return
 	 */
-	@Deprecated //remove as soon as new release of widget-experimental is available
+	/*@Deprecated //remove as soon as new release of widget-experimental is available
 	public static String getShortLabel(ReadOnlyTimeSeries schedule,
 			List<TimeSeriesFilterExtended> filters, NameService nameService, OgemaLocale locale) {
 		for(TimeSeriesFilterExtended filter : filters) {
@@ -196,10 +196,10 @@ public class ScheduleCsvDownloadExpert<T extends ReadOnlyTimeSeries> extends Sch
 		throw new IllegalArgumentException("Could not determine schedule label for time series " + schedule +
 				". Please provide a Long Name.");
 		
-	}
+	}*/
 	
-	@Deprecated //remove as soon as new release of widget-experimental is available
-	private static <S extends ReadOnlyTimeSeries> void writeValuesToFile(final Path base, final long start, final long end, final FileSystem zipfs, S rd,
+	/*@Deprecated //remove as soon as new release of widget-experimental is available
+	protected static <S extends ReadOnlyTimeSeries> void writeValuesToFile(final Path base, final long start, final long end, final FileSystem zipfs, S rd,
 			String filename, String formatId) throws IOException {
 		Path file = base.resolve(filename);
 		if(filename.endsWith(".csv")) {
@@ -213,10 +213,10 @@ public class ScheduleCsvDownloadExpert<T extends ReadOnlyTimeSeries> extends Sch
 		Path pathInZipfile = zipfs.getPath("/" + filename);          
 		// copy a file into the zip file
 		Files.move(file, pathInZipfile, StandardCopyOption.REPLACE_EXISTING );
-	}
+	}*/
 	
-	@Deprecated //remove as soon as new release of widget-experimental is available
-	private static void toCsvFile(Iterator<SampledValue> values, Path path, String formatId) throws IOException {
+	/*@Deprecated
+	protected static void toCsvFile(Iterator<SampledValue> values, Path path, String formatId) throws IOException {
 		final Locale locale;
 		final boolean celsius = (formatId != null) && formatId.contains("CELSIUS");
 		if(formatId != null && formatId.contains("DE")) locale = Locale.GERMANY;
@@ -271,10 +271,10 @@ public class ScheduleCsvDownloadExpert<T extends ReadOnlyTimeSeries> extends Sch
 			}
 			writer.flush();
 		}
-	}
+	}*/
 	
-	@Deprecated //remove as soon as new release of widget-experimental is available
-	private static void writeCSVLine(Writer writer, long timeStamp, SimpleDateFormat date, String val)
+	/*@Deprecated //remove as soon as new release of widget-experimental is available
+	protected static void writeCSVLine(Writer writer, long timeStamp, SimpleDateFormat date, String val)
 			throws IOException {
 		if(date == null)
 			writer.write(timeStamp + ";" + val + "\n");
@@ -283,7 +283,7 @@ public class ScheduleCsvDownloadExpert<T extends ReadOnlyTimeSeries> extends Sch
 	}
 	
 	@Deprecated //remove as soon as new release of widget-experimental is available
-	private static void toJSONFile(Iterator<SampledValue> values, Path path,String name) throws IOException {
+	protected static void toJSONFile(Iterator<SampledValue> values, Path path,String name) throws IOException {
 		try (final Writer writer = new BufferedWriter(new FileWriter(path.toFile()))) {
 			SampledValue sv;
 			SortedMap<Long, Float> map = new TreeMap<>();
@@ -301,5 +301,5 @@ public class ScheduleCsvDownloadExpert<T extends ReadOnlyTimeSeries> extends Sch
 			writer.write(json.toString()); 
 			writer.flush();
 		}
-	}
+	}*/
 }
