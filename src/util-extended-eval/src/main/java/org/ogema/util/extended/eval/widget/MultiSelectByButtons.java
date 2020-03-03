@@ -118,4 +118,8 @@ public class MultiSelectByButtons extends HtmlItem {
 		return table;
 		
 	}
+	
+	public Map<String, Button> getButtons() {
+		return buttons;
+	}
 }
