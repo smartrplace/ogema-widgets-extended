@@ -13,6 +13,7 @@ import org.ogema.core.channelmanager.measurements.SampledValue;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.util.directresourcegui.kpi.KPIMonitoringReport;
+import org.ogema.util.kpieval.KPIEvalUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.smartrplace.util.format.WidgetHelper;
@@ -211,12 +212,14 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		return def;
 	}
 	
-	protected KPIPageDefinitionWithEmail sampleQualityDefaultDefinition(String[] resultIds,
+	public static KPIPageDefinitionWithEmail sampleQualityDefaultDefinition(String[] resultIds,
 			String configName, boolean addEmailPage, String messageTitle) {
 		KPIPageDefinitionWithEmail result = new KPIPageDefinitionWithEmail() {
 			
 			@Override
 			public String getTitle() {
+				if(messageTitle == null)
+					return configName;
 				return messageTitle;
 			}
 			
@@ -231,22 +234,48 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		return result;
 	}
 	
-	   /** The provider may not provide a real evaluation, so the default implementation
-	    * should not be started*/
-		@Override
-		public GaRoDataTypeI[] getGaRoInputTypes() {
-			return new GaRoDataTypeI[] {};
-		}
+	public static KPIPageDefinitionWithEmail sampleQualityDefaultDefinitionDiff(String[] resultIds,
+			String configName, boolean addEmailPage, String messageTitle, String... lines) {
+		KPIPageDefinitionWithEmail result = new KPIPageDefinitionWithEmail() {
+			@Override
+			public String getTitle() {
+				if(messageTitle == null)
+					return configName;
+				return messageTitle;
+			}
 
-		@Override
-		protected List<GenericGaRoResultType> resultTypesGaRo() {
-			return Collections.emptyList();
-		}
+			@Override
+			public String getMessage(Collection<KPIStatisticsManagementI> kpis, long currentTime) {
+				String mes = "Time of message creation: "+TimeUtils.getDateAndTimeString(currentTime)+"\r\n";
+				for(String line: lines) {
+					mes += (line+"\r\n");
+				}
+				KPIEvalUtil.detectKPIChanges(kpis, currentTime, qualityResults);
+				return mes;
+			}
 
-		@Override
-		protected GenericGaRoEvaluationCore initEval(List<EvaluationInput> input, List<ResultType> requestedResults,
-				Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time, int size,
-				int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
-			return null;
-		}
+		};
+		result.kpiPageDefinition = getQualityDefaultDefinition(resultIds, configName, addEmailPage);
+		return result;
+	}
+
+	
+	/** The provider may not provide a real evaluation, so the default implementation
+	 * should not be started*/
+	@Override
+	public GaRoDataTypeI[] getGaRoInputTypes() {
+		return new GaRoDataTypeI[] {};
+	}
+
+	@Override
+	protected List<GenericGaRoResultType> resultTypesGaRo() {
+		return Collections.emptyList();
+	}
+
+	@Override
+	protected GenericGaRoEvaluationCore initEval(List<EvaluationInput> input, List<ResultType> requestedResults,
+			Collection<ConfigurationInstance> configurations, EvaluationListener listener, long time, int size,
+			int[] nrInput, int[] idxSumOfPrevious, long[] startEnd) {
+		return null;
+	}
 }
