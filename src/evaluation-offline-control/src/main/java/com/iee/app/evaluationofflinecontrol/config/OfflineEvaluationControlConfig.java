@@ -28,7 +28,7 @@ import com.iee.app.evaluationofflinecontrol.gui.OfflineEvaluationControl;
  */
 public interface OfflineEvaluationControlConfig extends Configuration {
 
-	ResourceList<ProviderEvalOfflineConfig> knownProviders();
+	//ResourceList<ProviderEvalOfflineConfig> knownProviders();
 	StringArrayResource dataProvidersToUse();
 	BooleanResource writeCsv();
 	

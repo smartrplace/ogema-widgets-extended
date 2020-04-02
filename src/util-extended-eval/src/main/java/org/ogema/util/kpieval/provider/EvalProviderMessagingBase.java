@@ -35,7 +35,8 @@ import de.iwes.util.timer.AbsoluteTiming;
  */
 public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalProviderPreEval {
 	public static final int COLUMN_WIDTH = 15;
-	
+	public static final String DEFAULT_QUALITY_EVALPROVIDER_ID = "aluthmon-quality_eval_provider";
+    	
 	/** Default set of resultIds of the default quality evaluation provider used by
 	 * 		{@link #sampleQualityDefaultDefinition(String[], String, boolean, String)} as default*/
 	public final static String[] qualityResults = new String[]{"TS_TOTAL", "TS_WITH_DATA", "TS_GOOD", "TS_GOLD",
@@ -45,7 +46,7 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 			"OVERALL_GAP_REL", "DURATION_HOURS", "$GAP_SENSORS", "timeOfCalculation"};
 
 	protected static final Logger logger = LoggerFactory.getLogger(EvalProviderMessagingBase.class);
-    
+
 	/** Provide your data types here*/
 	public static abstract class KPIPageDefinitionWithEmail {
 		/** If you want to define a message generation for the KPI page you have to set 
@@ -66,17 +67,28 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		 * ist still defined, but shall not be sent out automatically
 		 */
 		public boolean sendDailyMessage = true;
+		
+		public List<String> gatewayIdsToEvaluate;
 	}
 	
 	/** Define pages with email transmission.
 	 */
 	protected abstract List<KPIPageDefinitionWithEmail> getPages();
 	
+	/** Register Email messaging providers*/
+	protected abstract void addOrUpdatePageConfigFromProvider(KPIPageDefinition def, GaRoSingleEvalProvider eval);
+	
 	protected Map<String, KPIMessageDefinitionProvider> providers = new HashMap<>();
 	protected List<KPIPageDefinition> pageDefs = new ArrayList<>();
 	
     public EvalProviderMessagingBase(String id, String label, String description) {
 		super(id, label, description);
+		updatePageAndMessageProviders();
+	}
+
+    public void updatePageAndMessageProviders() {
+    	pageDefs.clear();
+    	providers.clear();
 		for(KPIPageDefinitionWithEmail kpem: getPages()) {
 			pageDefs.add(kpem.kpiPageDefinition);
 			if(kpem.kpiPageDefinition.messageProvider == null)
@@ -99,10 +111,10 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 				}
 			};
 			providers.put(kpem.kpiPageDefinition.messageProvider, prov);
-		}
-
-	}
-
+			addOrUpdatePageConfigFromProvider(kpem.kpiPageDefinition, this);
+		}    	
+    }
+    
     @Override
 	public List<KPIPageDefinition> getPageDefinitionsOffered() {
 		return pageDefs;
@@ -193,11 +205,18 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		else return tsId; //throw new IllegalStateException("Not a valid tsId for Homematic:"+tsId);
 	}
 	
+	/** Define page for quality evaluation and optionally also email generation
+	 * 
+	 * @param resultIds
+	 * @param configName
+	 * @param addEmailPage if false no email messaging will be defined
+	 * @return
+	 */
 	public static KPIPageDefinition getQualityDefaultDefinition(String[] resultIds,
 			String configName, boolean addEmailPage) {
 		KPIPageDefinition def = new KPIPageDefinition();
 		def.resultIds.add((resultIds!=null)?resultIds:qualityResults);
-		def.providerId = Arrays.asList(new String[] {"aluthmon-quality_eval_provider"});
+		def.providerId = Arrays.asList(new String[] {DEFAULT_QUALITY_EVALPROVIDER_ID});
 		def.configName = configName; // "Multi-GW Project Quality Report";
 		def.urlAlias = WidgetHelper.getValidWidgetId(configName);
 		def.specialIntervalsPerColumn.put("DURATION_HOURS", 1);
@@ -212,7 +231,7 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		return def;
 	}
 	
-	public static KPIPageDefinitionWithEmail sampleQualityDefaultDefinition(String[] resultIds,
+	/*public static KPIPageDefinitionWithEmail sampleQualityDefaultDefinition(String[] resultIds,
 			String configName, boolean addEmailPage, String messageTitle) {
 		KPIPageDefinitionWithEmail result = new KPIPageDefinitionWithEmail() {
 			
@@ -232,10 +251,33 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		};
 		result.kpiPageDefinition = getQualityDefaultDefinition(resultIds, configName, addEmailPage);
 		return result;
-	}
+	}*/
 	
+	/** Define quality evaluation page
+	 * 
+	 * @param resultIds if null the default set of quality defined in {@link #qualityResults} are used
+	 * @param configName must be a unique name for the page
+	 * @param addEmailPage see {@link #getQualityDefaultDefinition(String[], String, boolean)}
+	 * @param mode the way the quality results are evaluated
+	 * 		0 : no result evaluation
+	 *      1 : only standard evaluation with current values per day
+	 *      2 : only diff evaluation
+	 *      3 : both standard and diff evaluation
+	 * @param messageTitle if null configName will be used as title
+	 * @param lines if not null the lines provided here will be added after the initial body line
+	 * 		of the email before the result lines. Typically these lines contain links relevant for
+	 * 		manual analysis of the data provided by this email.
+	 * @return
+	 */
 	public static KPIPageDefinitionWithEmail sampleQualityDefaultDefinitionDiff(String[] resultIds,
-			String configName, boolean addEmailPage, String messageTitle, String... lines) {
+			String configName, boolean addEmailPage, int mode, String messageTitle,
+			List<String> gatewayIds,
+			String... lines) {
+		final String[] resultIdsLoc;
+		if(resultIds == null)
+			resultIdsLoc = qualityResults;
+		else
+			resultIdsLoc = resultIds;
 		KPIPageDefinitionWithEmail result = new KPIPageDefinitionWithEmail() {
 			@Override
 			public String getTitle() {
@@ -247,15 +289,19 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 			@Override
 			public String getMessage(Collection<KPIStatisticsManagementI> kpis, long currentTime) {
 				String mes = "Time of message creation: "+TimeUtils.getDateAndTimeString(currentTime)+"\r\n";
-				for(String line: lines) {
+				if(lines != null) for(String line: lines) {
 					mes += (line+"\r\n");
 				}
-				KPIEvalUtil.detectKPIChanges(kpis, currentTime, qualityResults);
+				if(mode == 1 || mode == 3)
+					mes += getMessageStdTable(kpis, currentTime, qualityResults);
+				if(mode == 2 || mode == 3)
+					mes += KPIEvalUtil.detectKPIChanges(kpis, currentTime, resultIdsLoc);
 				return mes;
 			}
 
 		};
-		result.kpiPageDefinition = getQualityDefaultDefinition(resultIds, configName, addEmailPage);
+		result.kpiPageDefinition = getQualityDefaultDefinition(resultIdsLoc, configName, addEmailPage);
+		result.gatewayIdsToEvaluate = gatewayIds;
 		return result;
 	}
 

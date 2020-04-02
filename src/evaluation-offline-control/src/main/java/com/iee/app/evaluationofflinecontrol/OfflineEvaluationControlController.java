@@ -132,7 +132,7 @@ public class OfflineEvaluationControlController {
 		}
 		else {
 			appConfigData = (OfflineEvaluationControlConfig) appMan.getResourceManagement().createResource(configResourceDefaultName, OfflineEvaluationControlConfig.class);
-			appConfigData.knownProviders().create();
+			//appConfigData.knownProviders().create();
 			appConfigData.activate(true);
 			appMan.getLogger().debug("{} started with new config resource", getClass().getName());
 		}
@@ -173,7 +173,7 @@ public class OfflineEvaluationControlController {
 		
 	}
 	
-	public ProviderEvalOfflineConfig getCreateEvalPersistentData(String providerId) {
+	/*public ProviderEvalOfflineConfig getCreateEvalPersistentData(String providerId) {
 		for(ProviderEvalOfflineConfig known: appConfigData.knownProviders().getAllElements()) {
 			if(known.providerId().getValue().equals(providerId)) return known;
 		}
@@ -183,7 +183,7 @@ public class OfflineEvaluationControlController {
 		result.includeIntoStandardEval().<BooleanResource>create().setValue(false);
 		result.activate(true);
 		return result;
-	}
+	}*/
 	
 	public GaRoSingleEvalProvider getEvalProvider(String id) {
 		EvaluationProvider p = serviceAccess.getEvaluations().get(id);
@@ -636,6 +636,13 @@ public class OfflineEvaluationControlController {
 		//	addMultiPage(testConfig);
 		return false;
 	}
+	}
+	
+	public void createKPIPagesDefinedByProvider(GaRoSingleEvalProvider eval) {
+		List<KPIPageDefinition> pdef = eval.getPageDefinitionsOffered();
+		for(KPIPageDefinition def: pdef) {
+			addOrUpdatePageConfigFromProvider(def, eval);
+		}		
 	}
 	
 	protected List<ResultToShow> getResultsSorted(KPIPageConfig testConfig) {

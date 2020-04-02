@@ -156,8 +156,8 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
 		offlineEval = new OfflineEvaluationControl(page1, controller);
 		//WidgetPage<?> page2 = widgetApp.createWidgetPage("EvaluationResultOverview.html");
 		//new EvaluationResultOverview(page2, controller);
-		WidgetPage<?> page3 = widgetApp.createWidgetPage("autoKPIs.html");
-		new KPIPage(page3, controller, evalResultMan);
+		//WidgetPage<?> page3 = widgetApp.createWidgetPage("autoKPIs.html");
+		//new KPIPage(page3, controller, evalResultMan);
 		WidgetPage<?> page3b = widgetApp.createWidgetPage("allKPIs.html");
 		new KPIPageLastEvals(page3b, controller, evalResultMan);
 		WidgetPage<?> page3c = widgetApp.createWidgetPage("specialKPIs.html");
@@ -179,7 +179,7 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
 		menu.addEntry("Evaluation Provider Overview", page);
 		menu.addEntry("Offline Evaluation Control", page1);
 		//menu.addEntry("Evaluation Result Overview", page2);
-		menu.addEntry("Auto-Scheduling KPI Overview", page3);
+		//menu.addEntry("Auto-Scheduling KPI Overview", page3);
 		menu.addEntry("All Last Calculated KPIs", page3b);
 		menu.addEntry("Special KPI Configurations", page3c);
 		//menu.addEntry("Special Algo Assessment KPI Configurations", page3cc);
@@ -196,8 +196,8 @@ public class OfflineEvaluationControlApp implements Application, OfflineEvalServ
 		mc.setCustomNavigation(menu);
 		//mc = page2.getMenuConfiguration();
 		//mc.setCustomNavigation(menu);
-		mc = page3.getMenuConfiguration();
-		mc.setCustomNavigation(menu);
+		//mc = page3.getMenuConfiguration();
+		//mc.setCustomNavigation(menu);
 		mc = page3b.getMenuConfiguration();
 		mc.setCustomNavigation(menu);
 		mc = page4.getMenuConfiguration();

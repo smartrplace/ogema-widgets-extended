@@ -509,8 +509,6 @@ public class OfflineEvaluationControl {
 					if(!(typeIn instanceof Class)) {
 						throw new IllegalStateException("Expecting resource type!");
 					}
-					//@SuppressWarnings("unchecked")
-					//Class<? extends Resource> type = (Class<? extends Resource>)typeIn;
 					
 					ChronoUnit chronoUnit = getChronoUnit(req);	
 					List<String> multiSelectedResults = (List<String>) resultsSelection.getSelectedLabels(req);
@@ -536,94 +534,9 @@ public class OfflineEvaluationControl {
 					}
 					String ci2 = addConfig(evalConfig.configurationResource(), "Configuration for EvaluationProvider "+eval.label(req.getLocale()));
 					setConfigId(ci2, req);
-					//} catch(ResourceNotFoundException e) {
-					//	throw new IllegalStateException("Existing config type:"+evalConfig.configurationResource().getResourceType().getName()+", expected:"+type.getName(), e);
-					//}
 				}
 			}
 		};
-		/*openScheduleViewer = new ScheduleViewerOpenButton(page, "openScheduleViewer", "Schedule Viewer",
-				ScheduleViewerConfigProvEvalOff.PROVIDER_ID,
-				ScheduleViewerConfigProvEvalOff.getInstance()) {
-
-			private static final long serialVersionUID = 1L;
-			
-			public void onGET(OgemaHttpRequest req) {
-				if(multiSelectGWs.getSelectedItems(req).isEmpty()) {
-					disable(req);
-				} else enable(req);
-			};
-			
-			@Override
-			public void onPrePOST(String data, OgemaHttpRequest req) {
-				final GaRoSingleEvalProvider eval = selectProvider.getSelectedItem(req);
-				final List<String> gwIDs = (List<String>) gateWaySelection.multiSelect.getSelectedLabels(req);
-				
-				List<GaRoMultiEvalDataProvider<?>> dps = controller.getDataProvidersToUse();
-				GaRoMultiEvalDataProvider<?> dp = dps.get(0);
-				List<TimeSeriesData> input = GaRoEvalHelper.getFittingTSforEval(dp, eval, gwIDs);
-				ReadOnlyTimeSeries timeSeries;
-				List<ReadOnlyTimeSeries> result = new ArrayList<>();
-				Map<ReadOnlyTimeSeries, String> shortNames = new HashMap<ReadOnlyTimeSeries, String>();
-				Map<ReadOnlyTimeSeries, String> longNames = new HashMap<ReadOnlyTimeSeries, String>();
-				//int idx = -1;
-				for (TimeSeriesData tsdBase : input) {
-					//idx++;
-					if(!(tsdBase instanceof TimeSeriesDataOffline)) throw new IllegalStateException("getStartAndEndTime only works on TimeSeriesData input!");
-					TimeSeriesDataOffline tsd = (TimeSeriesDataOffline) tsdBase;
-					timeSeries = tsd.getTimeSeries();
-					if(tsd instanceof TimeSeriesDataExtendedImpl) {
-						TimeSeriesDataExtendedImpl tse = (TimeSeriesDataExtendedImpl)tsd;
-						if(tse.type instanceof GaRoDataTypeI) {
-							if(tse.getIds().size() > 1) {
-								String gwId = tse.getIds().get(0);
-								String prop = System.getProperty("org.ogema.evaluationofflinecontrol.scheduleviewer.expert.sensorsToFilterOut."+gwId);
-								if(prop != null) {
-									List<String> sensorsToFilterOut = Arrays.asList(prop.split(","));
-									String shortId = tse.getProperty("deviceName");
-									if(shortId != null)
-										if(sensorsToFilterOut.contains(shortId)) continue;
-								}
-							}
-							String inputLabel = ((GaRoDataTypeI)tse.type).label(null).replace("Measurement", "");
-							shortNames.put(timeSeries, StringListFormatUtils.getStringFromList(tse.getIds(), inputLabel));
-							longNames.put(timeSeries, StringListFormatUtils.getStringFromList(tse.getIds(), tsd.label(null), inputLabel));
-						} else {
-							shortNames.put(timeSeries, StringListFormatUtils.getStringFromList(tse.getIds()));
-							longNames.put(timeSeries, StringListFormatUtils.getStringFromList(tse.getIds(), tsd.label(null)));
-						}
-					} else {
-						shortNames.put(timeSeries, tsd.label(null));
-						longNames.put(timeSeries, tsd.description(null));
-					}
-					if(timeSeries != null) result.add(timeSeries);
-				}
-				List<Collection<TimeSeriesFilter>> programs = new ArrayList<>();
-				List<TimeSeriesFilter> programsInner = new ArrayList<>();
-				programsInner.add(new DefaultTimeSeriesFilterExtended("Filter for "+eval.id(),
-						shortNames, longNames, null, null));
-				programs.add(programsInner);
-				
-				String config = selectConfig.getSelectedLabel(req);
-				IntervalConfiguration itv = StandardConfigurations.getConfigDuration(config, app.appMan);
-				final long startTime;
-				final long endTime;
-				if(itv.multiStart == null || itv.multiStart.length > 0) {
-					startTime = itv.start;
-					endTime = itv.end;
-				} else {
-					startTime = itv.multiStart[0];
-					endTime = itv.multiEnd[itv.multiStart.length-1];
-				}
-				
-				final ScheduleViewerConfiguration viewerConfiguration =
-						ScheduleViewerConfigurationBuilder.newBuilder().setPrograms(programs).
-						setStartTime(startTime).setEndTime(endTime).build();
-				
-				String ci = addConfig(new DefaultDedicatedTSSessionConfiguration(result, viewerConfiguration));
-				setConfigId(ci, req);
-			}
-		};*/
 		openScheduleViewer.addDefaultStyle(ButtonData.BOOTSTRAP_GREEN);
 
 		Button backupButton = getBackupButton(page,
@@ -662,34 +575,7 @@ public class OfflineEvaluationControl {
 			@Override
 			public void onPOSTComplete(String data, OgemaHttpRequest req) {
 				final GaRoSingleEvalProvider eval = selectProvider.getSelectedItem(req);
-				List<KPIPageDefinition> pdef = eval.getPageDefinitionsOffered();
-				for(KPIPageDefinition def: pdef) {
-					controller.addOrUpdatePageConfigFromProvider(def, eval);
-					/*KPIPageConfig pageConfig = controller.configureTestReport(def.providerId,
-							def.resultIds, null,
-							def.configName,
-							true, def.chronoUnit, def.defaultIntervalsToCalc, true);
-					pageConfig.sourceProviderId().<StringResource>create().setValue(eval.id());
-					pageConfig.sourceProviderId().activate(false);
-					if(def.hideOverallLine != null) {
-						pageConfig.hideOverallLine().<BooleanResource>create().setValue(def.hideOverallLine);
-						pageConfig.hideOverallLine().activate(false);
-					}
-					if(def.messageProvider != null) {
-						pageConfig.messageProviderId().<StringResource>create().setValue(def.messageProvider);
-						pageConfig.messageProviderId().activate(false);
-					}
-					controller.createMultiPage(pageConfig, def.defaultIntervalsPerColumnType,
-							def.urlAlias, false);
-					if(def.specialIntervalsPerColumn != null && (!def.specialIntervalsPerColumn.isEmpty()))
-					for(ResultToShow rts: pageConfig.resultsToShow().getAllElements()) {
-						Integer specialNum = def.specialIntervalsPerColumn.get(rts.resultId().getValue());
-						if(specialNum != null) {
-							ValueResourceHelper.setCreate(rts.columnsIntoPast(), specialNum);
-						}
-					}
-					controller.addMultiPage(pageConfig);*/
-				}
+				controller.createKPIPagesDefinedByProvider(eval);
 			}
 		};
 		
