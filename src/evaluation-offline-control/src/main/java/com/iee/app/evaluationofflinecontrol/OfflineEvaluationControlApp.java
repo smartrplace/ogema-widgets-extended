@@ -37,7 +37,6 @@ import org.osgi.framework.BundleContext;
 import com.iee.app.evaluationofflinecontrol.gui.ConfigurationPage;
 import com.iee.app.evaluationofflinecontrol.gui.GatewayConfigPage;
 import com.iee.app.evaluationofflinecontrol.gui.JSONResultPage;
-import com.iee.app.evaluationofflinecontrol.gui.KPIPage;
 import com.iee.app.evaluationofflinecontrol.gui.KPIPageGWOverview;
 import com.iee.app.evaluationofflinecontrol.gui.KPIPageLastEvals;
 import com.iee.app.evaluationofflinecontrol.gui.KPIShowAlgoAssessmentPage;

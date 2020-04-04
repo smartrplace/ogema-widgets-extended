@@ -69,7 +69,7 @@ public class KPIShowConfigurationPage extends KPIMonitoringReport {
 	
 	public KPIShowConfigurationPage(WidgetPage<?> page, OfflineEvaluationControlController app, EvalResultManagement evalResultMan) {
 		super(page, app.appMan, evalResultMan.getEvalScheduler(),
-				Arrays.asList(KPIPage.INTERVALS_OFFERED),
+				Arrays.asList(KPIPageGWOverview.INTERVALS_OFFERED),
 				3, true, EvalResultManagementStd.STANDARD_MULTIEVAL_INTERVAL_STEP, false, null, true);
 		if(scheduler == null) throw new IllegalStateException("We need an implementation with scheduler here!");
 		this.app = app;

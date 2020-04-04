@@ -35,7 +35,7 @@ import de.iwes.util.timer.AbsoluteTiming;
  */
 public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalProviderPreEval {
 	public static final int COLUMN_WIDTH = 15;
-	public static final String DEFAULT_QUALITY_EVALPROVIDER_ID = "aluthmon-quality_eval_provider";
+	public static final String DEFAULT_QUALITY_EVALPROVIDER_ID = "adefault-quality_eval_provider";
     	
 	/** Default set of resultIds of the default quality evaluation provider used by
 	 * 		{@link #sampleQualityDefaultDefinition(String[], String, boolean, String)} as default*/
@@ -54,7 +54,7 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		 *  shall be provided then set the messageProvider to null. In this case the other members are
 		 *  not relevant.<br>
 		 *  The following providerIds are supported by default:
-		 *  <li>aluthmon-quality_eval_provider: Used by {@link EvalProviderMessagingBase#sampleQualityDefaultDefinition(String[], String, boolean, String)}</li> 
+		 *  <li>adefault-quality_eval_provider: Used by {@link EvalProviderMessagingBase#sampleQualityDefaultDefinition(String[], String, boolean, String)}</li> 
 		 *  <li>basic-humidity_eval_provider<li>: Provider for the evaluation of room and inwall humidity,
 		 *       requires humidity sensors in the relevant rooms. See PrimaryHumidityEvalProvider for details.
 		 */
@@ -76,7 +76,7 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 	protected abstract List<KPIPageDefinitionWithEmail> getPages();
 	
 	/** Register Email messaging providers*/
-	protected abstract void addOrUpdatePageConfigFromProvider(KPIPageDefinition def, GaRoSingleEvalProvider eval);
+	protected abstract void addOrUpdatePageConfigFromProvider(KPIPageDefinitionWithEmail def, GaRoSingleEvalProvider eval);
 	
 	protected Map<String, KPIMessageDefinitionProvider> providers = new HashMap<>();
 	protected List<KPIPageDefinition> pageDefs = new ArrayList<>();
@@ -111,7 +111,7 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 				}
 			};
 			providers.put(kpem.kpiPageDefinition.messageProvider, prov);
-			addOrUpdatePageConfigFromProvider(kpem.kpiPageDefinition, this);
+			addOrUpdatePageConfigFromProvider(kpem, this);
 		}    	
     }
     
@@ -231,32 +231,13 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 		return def;
 	}
 	
-	/*public static KPIPageDefinitionWithEmail sampleQualityDefaultDefinition(String[] resultIds,
-			String configName, boolean addEmailPage, String messageTitle) {
-		KPIPageDefinitionWithEmail result = new KPIPageDefinitionWithEmail() {
-			
-			@Override
-			public String getTitle() {
-				if(messageTitle == null)
-					return configName;
-				return messageTitle;
-			}
-			
-			@Override
-			public String getMessage(Collection<KPIStatisticsManagementI> kpis, long currentTime) {
-				String mes = "Time of message creation: "+TimeUtils.getDateAndTimeString(currentTime)+"\r\n"+
-						getMessageStdTable(kpis, currentTime, qualityResults);
-				return mes;
-			}
-		};
-		result.kpiPageDefinition = getQualityDefaultDefinition(resultIds, configName, addEmailPage);
-		return result;
-	}*/
-	
-	/** Define quality evaluation page
+	/** Define/Add quality evaluation page. It should be possible to call this from various apps adding 
+	 *   gateways to the evaluation. In this case leave all possible parameters to null
+	 *   TODO: At the moment probably the last email definition will be used for the common email of all
+	 *   	projects if the same messageProvider is used. Otherwise separate emails are generated.
 	 * 
 	 * @param resultIds if null the default set of quality defined in {@link #qualityResults} are used
-	 * @param configName must be a unique name for the page
+	 * @param configName must be a unique name for the page. If null the default name for the common quality evaluation is used
 	 * @param addEmailPage see {@link #getQualityDefaultDefinition(String[], String, boolean)}
 	 * @param mode the way the quality results are evaluated
 	 * 		0 : no result evaluation
@@ -270,10 +251,15 @@ public abstract class EvalProviderMessagingBase extends GenericGaRoSingleEvalPro
 	 * @return
 	 */
 	public static KPIPageDefinitionWithEmail sampleQualityDefaultDefinitionDiff(String[] resultIds,
-			String configName, boolean addEmailPage, int mode, String messageTitle,
+			String configNameIn, boolean addEmailPage, int mode, String messageTitle,
 			List<String> gatewayIds,
 			String... lines) {
 		final String[] resultIdsLoc;
+		final String configName;
+		if(configNameIn == null)
+			configName = "Common Data Quality Report";
+		else
+			configName = configNameIn;
 		if(resultIds == null)
 			resultIdsLoc = qualityResults;
 		else

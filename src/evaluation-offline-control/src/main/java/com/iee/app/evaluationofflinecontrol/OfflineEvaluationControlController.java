@@ -42,7 +42,6 @@ import org.ogema.core.resourcemanager.ResourceValueListener;
 import org.ogema.externalviewer.extensions.DefaultScheduleViewerConfigurationProviderExtended;
 import org.ogema.model.action.Action;
 import org.ogema.model.jsonresult.MultiKPIEvalConfiguration;
-import org.ogema.tools.resource.util.ResourceUtils;
 import org.ogema.tools.resource.util.TimeUtils;
 import org.ogema.tools.resourcemanipulator.timer.CountDownAbsoluteTimer;
 import org.ogema.util.directresourcegui.kpi.KPIStatisticsUtil;
@@ -52,7 +51,6 @@ import org.smartrplace.util.message.MessageImpl;
 
 import com.iee.app.evaluationofflinecontrol.config.KPIPageConfig;
 import com.iee.app.evaluationofflinecontrol.config.OfflineEvaluationControlConfig;
-import com.iee.app.evaluationofflinecontrol.config.ProviderEvalOfflineConfig;
 import com.iee.app.evaluationofflinecontrol.config.ResultToShow;
 import com.iee.app.evaluationofflinecontrol.gui.KPIPageGWOverviewMultiKPI;
 import com.iee.app.evaluationofflinecontrol.gui.KPIPageGWOverviewMultiKPI.KPIColumn;
@@ -209,6 +207,7 @@ public class OfflineEvaluationControlController {
 		return result ;
 	}
 	
+	/** All GatewaysIds to be used on the system by default*/
 	public Set<String> getGatewayIds() {
 		List<GaRoMultiEvalDataProvider<?>> provs = getDataProvidersToUse();
 		Set<String> result = new HashSet<>();

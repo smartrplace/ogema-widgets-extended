@@ -35,6 +35,7 @@ import com.iee.app.evaluationofflinecontrol.config.ResultToShow;
 
 import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider;
 import de.iwes.timeseries.eval.garo.multibase.KPIStatisticsManagementI;
+import de.iwes.util.timer.AbsoluteTiming;
 import de.iwes.widgets.api.extended.resource.DefaultResourceTemplate;
 import de.iwes.widgets.api.widgets.WidgetPage;
 import de.iwes.widgets.api.widgets.html.Linebreak;
@@ -53,13 +54,19 @@ import de.iwes.widgets.html.form.label.Label;
  *
  */
 public class KPIPageGWOverview extends KPIMonitoringReport {
+	public static final Integer[] INTERVALS_OFFERED =
+			new Integer[]{AbsoluteTiming.DAY, AbsoluteTiming.WEEK, AbsoluteTiming.MONTH};
+	public static final List<Integer> INTERVALS_OFFERED_WSHORT =
+			Arrays.asList(new Integer[]{AbsoluteTiming.DAY, AbsoluteTiming.WEEK, AbsoluteTiming.MONTH,
+					AbsoluteTiming.HOUR, AbsoluteTiming.MINUTE});
+
 	protected final OfflineEvaluationControlController app;
 	private TemplateDropdown<KPIPageConfig> configDrop;
 	private TemplateDropdown<String> resultDrop;
 	
 	@Override
 	protected List<Integer> getIntervalTypes(OgemaHttpRequest req) {
-		if(app.showShortIntervalsInKPIs) return KPIPage.INTERVALS_OFFERED_WSHORT;
+		if(app.showShortIntervalsInKPIs) return INTERVALS_OFFERED_WSHORT;
 		else return super.getIntervalTypes(req);
 	}
 	
@@ -68,7 +75,7 @@ public class KPIPageGWOverview extends KPIMonitoringReport {
 	}
 	public KPIPageGWOverview(WidgetPage<?> page, OfflineEvaluationControlController app, boolean autoBuildPage) {
 		super(page, app.appMan, app.serviceAccess.evalResultMan().getEvalScheduler(),
-				Arrays.asList(KPIPage.INTERVALS_OFFERED),
+				Arrays.asList(INTERVALS_OFFERED),
 				3, true, EvalResultManagementStd.STANDARD_MULTIEVAL_INTERVAL_STEP, false,
 				Arrays.asList(new String[]{"Gateway"}), autoBuildPage);
 		if(scheduler == null) throw new IllegalStateException("We need an implementation with scheduler here!");

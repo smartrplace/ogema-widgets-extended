@@ -292,9 +292,9 @@ public class MainPage {
 	}
 	
 	public static int[] getKPIPageIntervals() {
-		int[] intarray = new int[KPIPage.INTERVALS_OFFERED.length];
-		for(int i=0; i<KPIPage.INTERVALS_OFFERED.length; i++) {
-			intarray[i] = KPIPage.INTERVALS_OFFERED[i];
+		int[] intarray = new int[KPIPageGWOverview.INTERVALS_OFFERED.length];
+		for(int i=0; i<KPIPageGWOverview.INTERVALS_OFFERED.length; i++) {
+			intarray[i] = KPIPageGWOverview.INTERVALS_OFFERED[i];
 		}
 		return intarray;
 	}
