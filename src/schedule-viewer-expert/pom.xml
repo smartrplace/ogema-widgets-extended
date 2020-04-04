@@ -84,6 +84,8 @@
 			<scope>test</scope>
 		</dependency>
 	</dependencies>
-	
+
+    <distributionManagement>
+    </distributionManagement>	
 
 </project>
