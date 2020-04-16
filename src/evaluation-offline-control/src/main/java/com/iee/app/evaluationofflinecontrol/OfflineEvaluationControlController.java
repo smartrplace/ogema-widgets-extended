@@ -319,18 +319,32 @@ public class OfflineEvaluationControlController {
 		}		
 	}
 	
+	public static boolean registerExistingMultiPagesDone = false;
+	public static boolean registerExistingMultiPagesStarted = false;
 	public void registerExistingMultiPages( ) {
-		for(KPIPageConfig item: appConfigData.kpiPageConfigs().getAllElements()) {
-			if(item.sourceProviderId().isActive()) {
-				GaRoSingleEvalProvider sourceEval = getEvalProvider(item.sourceProviderId().getValue());
-				if(sourceEval != null) 
-					if(addOrUpdateAndCreatePage(item, sourceEval))
-						return;
-			}
-			if(item.pageId().isActive()) addMultiPage(item);
+		// We wait for more pages to be registered by applications for clean start
+		try {
+			Thread.sleep(500);
+		} catch (InterruptedException e) {
+			e.printStackTrace();
 		}
+		registerExistingMultiPagesStarted = true;
+		for(KPIPageConfig item: appConfigData.kpiPageConfigs().getAllElements()) {
+			registerExistingMultiPage(item);
+		}
+		registerExistingMultiPagesDone = true;
 	}
 	
+	public void registerExistingMultiPage(KPIPageConfig item) {
+		if(item.sourceProviderId().isActive()) {
+			GaRoSingleEvalProvider sourceEval = getEvalProvider(item.sourceProviderId().getValue());
+			if(sourceEval != null) 
+				if(addOrUpdateAndCreatePage(item, sourceEval))
+					return;
+		}
+		if(item.pageId().isActive()) addMultiPage(item);
+	}
+
 	public void createMultiPage(KPIPageConfig pageConfig, int intervalsIntoPast, String pageId, boolean autoAdd) {
 		ValueResourceHelper.setCreate(pageConfig.defaultColumnsIntoPast(), intervalsIntoPast);
 		ValueResourceHelper.setCreate(pageConfig.pageId(), pageId);
@@ -555,7 +569,7 @@ public class OfflineEvaluationControlController {
 		System.out.println("         SENT MESSAGE "+mes.getTitle()+":\r\n"+mes.getMessage());
 	}
 	
-	public void addOrUpdatePageConfigFromProvider(KPIPageDefinition def,
+	public KPIPageConfig addOrUpdatePageConfigFromProvider(KPIPageDefinition def,
 			GaRoSingleEvalProvider eval) {
 		KPIPageConfig pageConfig = configureTestReport(def.providerId,
 				def.resultIds, null,
@@ -581,7 +595,7 @@ public class OfflineEvaluationControlController {
 			}
 		}
 		addMultiPage(pageConfig);
-		
+		return pageConfig;
 	}
 	
 	/** Update if configuration has to be changed*/
