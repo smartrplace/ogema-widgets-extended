@@ -18,6 +18,34 @@ import de.iwes.util.timer.AbsoluteTimeHelper;
 import de.iwes.util.timer.AbsoluteTiming;
 
 public class ExportBulkData {
+	public enum AggregationMode {
+		/** In this mode the input is expected as power value that has to be integrated over time to get
+		 * a daily value*/
+		Power2Meter,
+		/** In this mode the input is a meter value that has to be read e.g. once per day to
+		 * generate daily values or the first derivate has to be calculated to get power values
+		 */
+		Meter2Meter,
+		/** In this mode the input contains consumption values that reflect the consumption since the 
+		 * last value provided. So these values have to be added up to generate a real meter or have to
+		 * be divided by the respective time step to get power estimation values*/
+		Consumption2Meter
+	}
+	
+	public static enum UtilityType {
+		/** Default unit is kWh or kW*/
+		ELECTRICITY,
+		/** Default unit is kWh or kW*/
+		HEAT_ENERGY,
+		/** Default unit is m3 or l/h*/
+		WATER,
+		/** Default unit is kg*/
+		FOOD
+	}
+	public static interface DataTransformation {
+		float getValueToUse(float rawData); 
+	}
+	
 	/** If not specified otherwise usually all requirements defined within an option have to be fulfilled (AND linking).
 	 * All ComplexOptionDescriptions given via #getComplexOptionsExtended are evalulated and all results shall
 	 * be used, so these represent an OR linking of the conditions*/
@@ -26,6 +54,13 @@ public class ExportBulkData {
 		 * String starting with # e.g. for manual time series*/
 		public String pathElement = null;
 		public GaRoDataTypeI type = null;
+		/** For each input a consumption analysis can be defined*/
+		public UtilityType utilityType = null;
+		/** Factor to transform the data into the standard values of the utility. If null */
+		public DataTransformation utilityFactor = null;
+		/** Configuration of utility evaluation. If null no consumption evaluation is configured*/
+		public AggregationMode meterType = null;
+		
 		public ComplexOptionDescription(String pathElement) {
 			this.pathElement = pathElement;
 		}
