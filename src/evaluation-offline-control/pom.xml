@@ -14,8 +14,8 @@
     
     <artifactId>evaluation-offline-control</artifactId>
     <groupId>com.example.app</groupId>
-    <name>evaluation-offline-control</name>
-    <description>Evaluation Offline Control app</description>
+    <name>Evaluation Configuration</name>
+    <description>Evaluation Offline Configuration and Control app</description>
     
     <packaging>bundle</packaging>
     
