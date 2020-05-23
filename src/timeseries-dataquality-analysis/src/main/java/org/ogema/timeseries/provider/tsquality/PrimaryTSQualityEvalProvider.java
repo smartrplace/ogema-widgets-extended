@@ -107,8 +107,7 @@ public class PrimaryTSQualityEvalProvider extends QualityEvalProviderBase {
     		processCallforTS(totalInputIdx, idxOfRequestedInput, idxOfEvaluationInput,
     				timeStamp, false);
     		
-    		switch(idxOfRequestedInput) {
-    		case WINDOW_IDX:
+    		if(idxOfRequestedInput == WINDOW_IDX) {
     			boolean state = (sv.getValue().getFloatValue() > 0.5f);
     			if(openEventStarted[idxOfEvaluationInput] > 0) {
     				if(!state) openEventStarted[idxOfEvaluationInput] = -1;
@@ -118,7 +117,6 @@ public class PrimaryTSQualityEvalProvider extends QualityEvalProviderBase {
     					(countWindowEvents[idxOfEvaluationInput])++;
     				}
     			}
-    			break;
     		}
     		//System.out.println("Timestamp:"+timeStamp+" F:"+TimeUtils.getDateAndTimeString(timeStamp)+" DurT:"+durationTime+" Dif:"+(timeStamp-startTime)+ "gap:"+gapTime);
     	}
