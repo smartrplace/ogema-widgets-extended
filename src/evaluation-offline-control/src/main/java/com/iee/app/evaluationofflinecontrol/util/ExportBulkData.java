@@ -6,6 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.ogema.core.application.ApplicationManager;
+import org.ogema.devicefinder.api.ConsumptionInfo.AggregationMode;
 import org.ogema.externalviewer.extensions.IntervalConfiguration;
 
 import de.iwes.timeseries.eval.api.TimeSeriesData;
@@ -18,20 +19,6 @@ import de.iwes.util.timer.AbsoluteTimeHelper;
 import de.iwes.util.timer.AbsoluteTiming;
 
 public class ExportBulkData {
-	public enum AggregationMode {
-		/** In this mode the input is expected as power value that has to be integrated over time to get
-		 * a daily value*/
-		Power2Meter,
-		/** In this mode the input is a meter value that has to be read e.g. once per day to
-		 * generate daily values or the first derivate has to be calculated to get power values
-		 */
-		Meter2Meter,
-		/** In this mode the input contains consumption values that reflect the consumption since the 
-		 * last value provided. So these values have to be added up to generate a real meter or have to
-		 * be divided by the respective time step to get power estimation values*/
-		Consumption2Meter
-	}
-	
 	public static enum UtilityType {
 		/** Default unit is kWh or kW*/
 		ELECTRICITY,
