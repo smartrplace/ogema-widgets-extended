@@ -6,7 +6,7 @@ import java.util.List;
 import java.util.Objects;
 
 import org.ogema.core.application.ApplicationManager;
-import org.ogema.devicefinder.api.ConsumptionInfo.AggregationMode;
+import org.ogema.devicefinder.api.DatapointInfo.AggregationMode;
 import org.ogema.externalviewer.extensions.IntervalConfiguration;
 
 import de.iwes.timeseries.eval.api.TimeSeriesData;
