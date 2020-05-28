@@ -450,7 +450,7 @@ public class OfflineEvaluationControl {
 		
 		startOfflineEval.addDefaultStyle(ButtonData.BOOTSTRAP_GREEN);
 
-		openScheduleViewer = getScheduleViewerOpenButton(page, "openScheduleViewer", multiSelectGWs, selectProvider,
+		openScheduleViewer = getScheduleViewerOpenButton(page, "openScheduleViewer", multiSelectGWs, selectProvider, null,
 				app, selectConfig,
 			new ScheduleViewerOpenButtonDataProvider() {
 				
@@ -1012,7 +1012,8 @@ public class OfflineEvaluationControl {
 	}
 	public static ScheduleViewerOpenButton getScheduleViewerOpenButton(WidgetPage<?> page, String widgetId,
 			TemplateMultiselect<String> multiSelectGWs,
-			TemplateDropdown<GaRoSingleEvalProvider> selectProvider,
+			//one of the following two arguments must be non-null
+			TemplateDropdown<GaRoSingleEvalProvider> selectProvider, String fixedEvalProviderId,
 			OfflineEvaluationControlController controller,
 			//MultiSelectExtended<String> gateWaySelection,
 			TemplateDropdown<String> selectConfig,
@@ -1042,6 +1043,8 @@ public class OfflineEvaluationControl {
 
 			@Override
 			protected String getEvaluationProviderId(OgemaHttpRequest req) {
+				if(fixedEvalProviderId != null)
+					return fixedEvalProviderId;
 				return selectProvider.getSelectedItem(req).id();
 			}
 
