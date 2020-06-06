@@ -1089,36 +1089,6 @@ public class OfflineEvaluationControl {
 		protected IntervalConfiguration getInterval(OgemaHttpRequest req) {
 			String config = selectConfig.getSelectedLabel(req);
 			return ExportBulkData.getInterval(config, controller.appMan);
-			/*if(config.equals("TestOneMonth")) {
-				IntervalConfiguration r = new IntervalConfiguration();
-				long now = controller.appMan.getFrameworkTime();
-				r.end = AbsoluteTimeHelper.getIntervalStart(now, AbsoluteTiming.MONTH)-1;
-				r.end = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -1, AbsoluteTiming.MONTH);
-				r.start = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -1, AbsoluteTiming.MONTH);
-				return r;
-			} else if(config.equals("Test From Feb-June")) {
-				IntervalConfiguration r = new IntervalConfiguration();
-				long now = controller.appMan.getFrameworkTime();
-				r.end = AbsoluteTimeHelper.getIntervalStart(now, AbsoluteTiming.MONTH)-1;
-				r.end = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -2, AbsoluteTiming.MONTH);
-				r.start = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -1, AbsoluteTiming.MONTH);
-				return r;
-			} else if(config.equals("Test from June-Sep")) {
-				IntervalConfiguration r = new IntervalConfiguration();
-				long now = controller.appMan.getFrameworkTime();
-				r.end = AbsoluteTimeHelper.getIntervalStart(now, AbsoluteTiming.MONTH)-1;
-				r.end = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -3, AbsoluteTiming.MONTH);
-				r.start = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -2, AbsoluteTiming.MONTH);
-				return r;
-			} else if(config.equals("Test from Oct-Feb")) {
-				IntervalConfiguration r = new IntervalConfiguration();
-				long now = controller.appMan.getFrameworkTime();
-				r.end = AbsoluteTimeHelper.getIntervalStart(now, AbsoluteTiming.MONTH)-1;
-				r.end = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -5, AbsoluteTiming.MONTH);
-				r.start = AbsoluteTimeHelper.addIntervalsFromAlignedTime(r.end+1, -2, AbsoluteTiming.MONTH);
-				return r;
-			}			
-			return StandardConfigurations.getConfigDuration(config, controller.appMan);*/
 		}
 		
 		@Override
