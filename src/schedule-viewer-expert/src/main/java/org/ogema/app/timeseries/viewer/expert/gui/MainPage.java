@@ -110,7 +110,8 @@ public class MainPage {
 		StaticTable headerTable = new StaticTable(1, 3);
 		headerTable.setContent(0, 0, header);
 		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.addclosetabbutton")) {
-			WindowCloseButton closeTabButton = new WindowCloseButton(page, "closeTabButtonBuilding", "Fertig");
+			WindowCloseButton closeTabButton = new WindowCloseButton(page, "closeTabButtonBuilding",
+					System.getProperty("org.ogema.app.navigation.closetabbuttontext", "Fertig"));
 			closeTabButton.addDefaultStyle(ButtonData.BOOTSTRAP_RED);
 			headerTable.setContent(0, 1, closeTabButton);
 		}
