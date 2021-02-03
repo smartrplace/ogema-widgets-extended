@@ -11,6 +11,7 @@
 	<groupId>org.ogema.tools</groupId>
 	<artifactId>schedule-viewer-expert</artifactId>
 	<name>Timeseries Viewer Expert</name>
+	<version>2.1.3-SNAPSHOT</version>
 	<description>Scheduleviewer Expert: Open this App via other Applications for Custom View</description>
 	<packaging>bundle</packaging>
 

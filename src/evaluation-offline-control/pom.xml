@@ -2,18 +2,15 @@
 <project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
     <modelVersion>4.0.0</modelVersion>
     <parent>
-       <!-- <artifactId>apps-master</artifactId>
-       <groupId>org.ogema.apps</groupId>
-        <version>2.2.1-SNAPSHOT</version>
-        -->
-	    <groupId>org.ogema.eval</groupId>
-	    <artifactId>eval-extended</artifactId>
-	    <version>2.1.3-SNAPSHOT</version>
+        <groupId>org.ogema.eval</groupId>
+        <artifactId>eval-extended</artifactId>
+        <version>2.1.3-SNAPSHOT</version>
     </parent>
   
     
     <artifactId>evaluation-offline-control</artifactId>
     <groupId>com.example.app</groupId>
+    <version>2.1.3-SNAPSHOT</version>
     <name>Evaluation Configuration</name>
     <description>Evaluation Offline Configuration and Control app</description>
     
