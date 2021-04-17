@@ -20,6 +20,7 @@ import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collection;
 import java.util.Collections;
+import java.util.ConcurrentModificationException;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.LinkedHashMap;
@@ -828,7 +829,12 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 						//System.out.println("size:"+sizeLoc+", but iterator has "+count+" elements");
 						size += count;
 					}
-					else size += dps.size();
+					else try {
+						size += dps.size();
+					} catch(ConcurrentModificationException e) {
+						dps = new ArrayList<>(sched.getValues(startTime, endTime));
+						size += dps.size();
+					}
 					//size += sched.size(startTime, endTime);
 				}
 		        NumberFormat nf = NumberFormat.getInstance(Locale.GERMAN);		   
