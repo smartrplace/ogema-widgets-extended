@@ -264,7 +264,7 @@ public class ResourceImportExportManager {
 		        }
 		    }
 	    } else if(folder.getPath().endsWith(".zip")) { // import .zip file
-	    	try (FileSystem fs = FileSystems.newFileSystem(folder.toPath(), null)) {
+	    	try (FileSystem fs = FileSystems.newFileSystem(folder.toPath(), (ClassLoader)null)) {
 	    		final Path base = fs.getRootDirectories().iterator().next();
 	    		// using somewhat cumbersome Java7 method here, Java8 is more convenient
 	    		Files.walkFileTree(base, new FileVisitor<Path>() {
