@@ -629,7 +629,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 				@Override
 				public void onGET(OgemaHttpRequest req) {
 					if (getSessionConfiguration(req) != null && getSessionConfiguration(req).generateGraphImmediately()) {
-						updatePlot(this, am, req, showCheckboxes);
+						updatePlot(this, am, req, showCheckboxes, true);
 					}
 				}
 			};
@@ -641,7 +641,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 				@Override
 				public void onGET(OgemaHttpRequest req) {
 					if (getSessionConfiguration(req) != null && getSessionConfiguration(req).generateGraphImmediately()) {
-						updatePlot(this, am, req, showCheckboxes);
+						updatePlot(this, am, req, showCheckboxes, true);
 					}
 				}
 			};			
@@ -656,7 +656,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 
 			@Override
 			public void onPOSTComplete(String data, OgemaHttpRequest req) {
-				updatePlot(schedulePlot, am, req, showCheckboxes);
+				updatePlot(schedulePlot, am, req, showCheckboxes, false);
 			}
 		};
 	}
@@ -669,7 +669,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 * @param showCheckboxes
 	 */
 	private void updatePlot(TimeSeriesPlot<?, ?, ?> plot, final ApplicationManager am, OgemaHttpRequest req,
-			boolean showCheckboxes) {
+			boolean showCheckboxes, boolean forceSelector) {
 		final SessionConfiguration cfg = getSessionConfiguration(req);
 		// TODO set line type
 		ScheduleViewerConfiguration viewerConfig = sessionConfig(req).viewerConfiguration();
@@ -686,6 +686,9 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 				getPlotConfiguration(req).doScale(false);
 		}
 		
+		if(forceSelector) {
+			scheduleSelector(req).onGET(req);
+		}
 		final List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
 		long startTime = scheduleStartPicker.getDateLong(req);
 		long endTime = scheduleEndPicker.getDateLong(req);
