@@ -42,6 +42,9 @@ import org.ogema.core.timeseries.ReadOnlyTimeSeries;
 import org.ogema.util.extended.eval.widget.MultiSelectByButtons;
 import org.ogema.widgets.reswidget.schedulecsvdownload.expert.ScheduleCsvDownloadExpert;
 import org.ogema.widgets.reswidget.scheduleviewer.api.expert.ext.ScheduleViewerConfigurationExpert;
+import org.smartrplace.app.timeseries.viewer.expert.minmaxtable.DefaultSchedulePresentationDataPlus;
+import org.smartrplace.app.timeseries.viewer.expert.minmaxtable.MinMaxTable;
+import org.smartrplace.app.timeseries.viewer.expert.minmaxtable.MinMaxTableConfiguration;
 
 import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
 import de.iwes.widgets.api.widgets.OgemaWidget;
@@ -212,6 +215,10 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected Header manipulatorHeader;
 	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
 	protected Header downloadHeader;
+	
+	protected MinMaxTable minMaxTable;
+	protected Header minMaxHeader;
+	
 	protected Label optionsLabel;
 	protected Checkbox optionsCheckbox;
 	protected MultiSelectByButtons multiSelectOptions;
@@ -331,6 +338,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		initRow5ManipulateSchedule(page);
 		initRow678SelectIntervall(page, id);
 		initRow9SelectLineType(page, id);
+		initRow10MinMaxTable(page);
 
 		saveConfigurationButton = getSaveConfigurationButton(id);
 		//selectAllSchedulesButton = new SelectAllButton(page, id + "_selectScheduleButton");
@@ -481,6 +489,55 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 				setSchedule((Schedule) selectedSchedules.get(0), req);
 				long startTime = scheduleStartPicker.getDateLong(req);
 				setStartTime(startTime, req);
+			}
+		};
+	}
+
+	/**
+	 * Initializes the row of the dynamicTable with a MinMaxTable
+	 * 
+	 * @param page
+	 */
+	private void initRow10MinMaxTable(WidgetPage<?> page) {
+		this.minMaxHeader =  new Header(page, "minMaxHeader",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.minmaxheading", "Plot Data Summary")) {
+			private static final long serialVersionUID = 1L;
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				if (configuration(req).showMinMaxTable || isExpertMode(req)) {
+					setWidgetVisibility(true, req);
+				} else {
+					setWidgetVisibility(false, req);
+				}
+			}
+		};
+		minMaxHeader.setDefaultHeaderType(3);
+		minMaxHeader.addDefaultStyle(HeaderData.TEXT_ALIGNMENT_CENTERED);
+
+		MinMaxTableConfiguration newConfig = new MinMaxTableConfiguration(alert);
+		this.minMaxTable = new MinMaxTable(page, "minMaxtable", newConfig, am) {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				if (configuration(req).showMinMaxTable || isExpertMode(req)) {
+					setWidgetVisibility(true, req);
+				} else {
+					setWidgetVisibility(false, req);
+					return;
+				}
+				boolean showCheckboxes = true;
+				GetPlotDataResult data = getSchedulesToPlot(showCheckboxes , req);
+				//List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
+				List<DefaultSchedulePresentationDataPlus> schedules = new ArrayList<>();
+				for(DefaultSchedulePresentationData input: data.schedData) {
+					schedules.add(new DefaultSchedulePresentationDataPlus(
+							input, data.startTime, data.endTime));
+				}
+				setSchedule(schedules, req);
+				//long startTime = scheduleStartPicker.getDateLong(req);
+				//setStartTime(startTime, req);
 			}
 		};
 	}
@@ -670,7 +727,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 */
 	private void updatePlot(TimeSeriesPlot<?, ?, ?> plot, final ApplicationManager am, OgemaHttpRequest req,
 			boolean showCheckboxes, boolean forceSelector) {
-		final SessionConfiguration cfg = getSessionConfiguration(req);
+		//final SessionConfiguration cfg = getSessionConfiguration(req);
 		// TODO set line type
 		ScheduleViewerConfiguration viewerConfig = sessionConfig(req).viewerConfiguration();
 		if(viewerConfig.isShowPlotTypeSelector()) {
@@ -689,20 +746,24 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		if(forceSelector) {
 			scheduleSelector(req).onGET(req);
 		}
-		final List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
+		/*final List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
 		long startTime = scheduleStartPicker.getDateLong(req);
-		long endTime = scheduleEndPicker.getDateLong(req);
+		long endTime = scheduleEndPicker.getDateLong(req);*/
 
-		boolean showEmpty;
+		/*boolean showEmpty;
 		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {
 			showEmpty = showCheckboxes ? multiSelectOptions.getSelectedItems(req).contains(SHOW_EMPTY_OPT) : true;
 		} else
 			showEmpty = showCheckboxes ? optionsCheckbox.getCheckboxList(req).get(SHOW_EMPTY_OPT) : true;
 		if (startTime > endTime)
 			startTime = endTime;
-		plot.setInterval(startTime, endTime, req);
+		plot.setInterval(startTime, endTime, req);*/
 		Map<String, SchedulePresentationData> schedules = new LinkedHashMap<String, SchedulePresentationData>();
-		for (ReadOnlyTimeSeries sched : selectedSchedules) {
+		GetPlotDataResult plotData = getSchedulesToPlot(showCheckboxes, req);
+		for(DefaultSchedulePresentationData schedData: plotData.schedData) {
+			schedules.put(schedData.label, schedData);			
+		}
+		/*for (ReadOnlyTimeSeries sched : selectedSchedules) {
 			if (!showEmpty && sched.isEmpty(startTime, endTime))
 				continue;
 			Resource parent = null;
@@ -736,11 +797,70 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 			}
 			String label = getLabelForPlot(req, sched);
 			schedules.put(label, new DefaultSchedulePresentationData(sched, type, label));
-		}
+		}*/
 		ScheduleData<?> data = plot.getScheduleData(req);
 		data.setSchedules(schedules);
 	}
+	
+	protected class GetPlotDataResult {
+		List<DefaultSchedulePresentationData> schedData = new ArrayList<>();	
+		long startTime;
+		long endTime;
+	}
+	protected GetPlotDataResult getSchedulesToPlot(boolean showCheckboxes, OgemaHttpRequest req) {
+		GetPlotDataResult result = new GetPlotDataResult();
+		
+		final List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
+		
+		result.startTime = scheduleStartPicker.getDateLong(req);
+		result.endTime = scheduleEndPicker.getDateLong(req);
 
+		boolean showEmpty;
+		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {
+			showEmpty = showCheckboxes ? multiSelectOptions.getSelectedItems(req).contains(SHOW_EMPTY_OPT) : true;
+		} else
+			showEmpty = showCheckboxes ? optionsCheckbox.getCheckboxList(req).get(SHOW_EMPTY_OPT) : true;
+		if (result.startTime > result.endTime)
+			result.startTime = result.endTime;
+
+		for (ReadOnlyTimeSeries sched : selectedSchedules) {
+			if (!showEmpty && sched.isEmpty(result.startTime, result.endTime))
+				continue;
+			Resource parent = null;
+			Class<?> type = null;
+			List<Collection<TimeSeriesFilter>> programs = ScheduleSelector.parseFilters(configuration(req).programs);// sessionconfig.programsPreselected();
+			List<Collection<TimeSeriesFilterExtended>> filterCollection = ScheduleViewerUtil.getInstance()
+					.parse(programs, am.getResourceAccess());
+			List<TimeSeriesFilterExtended> filters = new ArrayList<>();
+			for(Collection<TimeSeriesFilterExtended> item : filterCollection) {
+				filters.addAll(item);
+			}	
+			for(TimeSeriesFilterExtended filter : filters) {
+				if(filter.accept(sched)) {
+					type = filter.type(sched);
+				}
+			}
+			if(type == null) {
+				if (sched instanceof SchedulePresentationData) {
+					type = ((SchedulePresentationData) sched).getScheduleType();
+				} else if (sched instanceof Schedule) {
+					parent = ((Schedule) sched).getParent();
+				} else if (sched instanceof RecordedData) {
+					String path = ((RecordedData) sched).getPath();
+					parent = am.getResourceAccess().getResource(path);
+				} //else
+				//	continue;
+			}
+			if ((type == null) && (parent != null)) {
+				if ((parent instanceof SingleValueResource) && (!(parent instanceof StringResource)))
+					type = parent.getResourceType();
+			}
+			String label = getLabelForPlot(req, sched);
+			result.schedData.add(new DefaultSchedulePresentationData(sched, type, label));
+		}
+		return result;
+	}
+	
 	/**
 	 * Returns the Label for the Plot (Longname, Shortname oder Location)
 	 * @param req
@@ -1109,6 +1229,10 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		if (manipulator != null) {
 			this.append(manipulatorHeader, null).linebreak(null).append(manipulator, null);
 		}
+		if (minMaxTable != null) {
+			this.append(minMaxHeader, null).linebreak(null).append(minMaxTable, null);
+		}
+
 		if (individualConfigPopup != null)
 			this.append(individualConfigPopup, null);
 	}
@@ -1127,6 +1251,8 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 
 		if (manipulator != null)
 			updateButton.triggerAction(manipulator, POST_REQUEST, GET_REQUEST);
+		if (minMaxTable != null)
+			updateButton.triggerAction(minMaxTable, POST_REQUEST, GET_REQUEST);
 		if (csvDownload != null)
 			updateButton.triggerAction(csvDownload, POST_REQUEST, GET_REQUEST);
 		updateButton.triggerAction(schedulePlot, TriggeringAction.POST_REQUEST, TriggeredAction.GET_REQUEST);

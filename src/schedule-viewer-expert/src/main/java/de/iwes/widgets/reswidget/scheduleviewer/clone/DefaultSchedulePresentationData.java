@@ -161,6 +161,10 @@ public class DefaultSchedulePresentationData implements SchedulePresentationData
 	public Iterator<SampledValue> iterator(long startTime, long endTime) {
 		return rots.iterator(startTime, endTime);
 	}
+	
+	public ReadOnlyTimeSeries getTimeseries() {
+		return rots;
+	}
 
 	@Override
 	public String toString() {
