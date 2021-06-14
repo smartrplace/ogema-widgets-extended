@@ -76,6 +76,15 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 			count++;
 			sum += val;
 		}
+		if(count == 0) {
+			final Label minLabel = new Label(parent, lineId+ "_minLabel", "--",req);
+			row.addCell("Minimum", minLabel);
+			final Label maxLabel = new Label(parent, lineId+ "_maxLabel", "--",req);
+			row.addCell("Maximum", maxLabel);
+			final Label avLabel = new Label(parent, lineId+ "_avLabel", "--",req);
+			row.addCell("Average", avLabel);
+			return row;
+		}
 		float av = (float) (sum/count);
 				
 		final Label minLabel = new Label(parent, lineId+ "_minLabel", String.format("%.1f", min),req);
