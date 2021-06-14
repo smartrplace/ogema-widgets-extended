@@ -36,7 +36,7 @@ public class ViewerDatepicker extends Datepicker {
 		Long explicitDate = null;
 		boolean fixedInterval = false;
 		boolean init = true;
-		//boolean initBug = true;
+		boolean initBug = true;
 
 		public ViewerDatepickerData(ViewerDatepicker datepicker) {
 			super(datepicker);
@@ -75,7 +75,7 @@ public class ViewerDatepicker extends Datepicker {
 		//}
 		final SessionConfiguration sessionConfig = schedView.getSessionConfiguration(req);
 
-		synchronized(req) { if (getData(req).init) {
+		if (getData(req).init || getData(req).initBug) {
 			ScheduleViewerConfiguration vc = sessionConfig.viewerConfiguration();
 			Long[] vcTime = null;
 			if(vc != null) {
@@ -99,15 +99,15 @@ public class ViewerDatepicker extends Datepicker {
 				}
 			}
 
-			// FIXME: triggering bug: Widget is called twice by opening Page - without
+			// FIXME: triggering bug: Widget is calles two times by opening Page - without
 			// manualy triggerAction at GET
-			//if (getData(req).initBug) {
-			//	getData(req).initBug = false;
-			//	return;
-			//}
+			if (getData(req).initBug) {
+				getData(req).initBug = false;
+				return;
+			}
 			getData(req).init = false;
 			return;
-		}}
+		}
 
 		boolean fixInterval;
 		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {
