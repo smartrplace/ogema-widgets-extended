@@ -30,25 +30,26 @@ import de.iwes.widgets.html.complextable.RowTemplate;
 import de.iwes.widgets.html.form.label.Label;
 
 // FIXME changing the time leads to display error and BAD quality; date changing works -> ?
-// FIXME adding session dependent widgets to widget group?
-public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentationDataPlus> {
+// FIXME adding session dependent widgets to widget group?type name = new type();
+@Deprecated
+public class MinMaxTableRowTemplatePageSnippet extends RowTemplate<DefaultSchedulePresentationDataPlus> {
 	public static final float COMMENT_ONLY_VALUE_TS = -99876;
 	
 	// this is the DynamicTable widget
 	private final OgemaWidget parent;
 	// need this to trigger updates; will also trigger table update
-	private final MinMaxTable scheduleManipulator;
+	private final MinMaxTablePageSnippet scheduleManipulator;
 	// note: the alert may be null
 	private final Alert alert;
 	private final static TriggeredAction SCHEDULE_CHANGED = new TriggeredAction("scheduleChanged");
 	
-	public MinMaxTableRowTemplate(MinMaxTable scheduleManipulator) {
-		this(scheduleManipulator, null);
+	public MinMaxTableRowTemplatePageSnippet(OgemaWidget parent, MinMaxTablePageSnippet scheduleManipulator) {
+		this(parent, scheduleManipulator, null);
 	}
 	
-	public MinMaxTableRowTemplate(MinMaxTable scheduleManipulator,  Alert alert) {
-		this.parent = scheduleManipulator;
-		this.scheduleManipulator = scheduleManipulator;
+	public MinMaxTableRowTemplatePageSnippet(OgemaWidget parent, MinMaxTablePageSnippet minMaxTablePageSnippet,  Alert alert) {
+		this.parent = parent;
+		this.scheduleManipulator = minMaxTablePageSnippet;
 		this.alert = alert;
 	}
 	

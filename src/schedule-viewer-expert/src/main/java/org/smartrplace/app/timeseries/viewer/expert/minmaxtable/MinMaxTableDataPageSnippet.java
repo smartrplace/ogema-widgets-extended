@@ -17,10 +17,10 @@ package org.smartrplace.app.timeseries.viewer.expert.minmaxtable;
 
 import java.util.List;
 
-import de.iwes.widgets.html.complextable.DynamicTableData;
+import de.iwes.widgets.api.extended.html.bricks.PageSnippetData;
 
 @Deprecated
-public class MinMaxTableData extends DynamicTableData<DefaultSchedulePresentationDataPlus> {
+public class MinMaxTableDataPageSnippet extends PageSnippetData {
 	
 	private List<DefaultSchedulePresentationDataPlus> schedule = null;
 	// choose MIN_VALUE, so it is displayed first
@@ -31,7 +31,7 @@ public class MinMaxTableData extends DynamicTableData<DefaultSchedulePresentatio
 	 ************************* constructors **********************
 	 */
     
-    public MinMaxTableData(MinMaxTable manipulator) {
+    public MinMaxTableDataPageSnippet(MinMaxTablePageSnippet manipulator) {
     	super(manipulator);
 	}
     

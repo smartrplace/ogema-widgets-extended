@@ -498,7 +498,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	 * 
 	 * @param page
 	 */
-	private void initRow10MinMaxTable(WidgetPage<?> page) {
+	/*private void initRow10MinMaxTable(WidgetPage<?> page) {
 		this.minMaxHeader =  new Header(page, "minMaxHeader",
 				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.minmaxheading", "Plot Data Summary")) {
 			private static final long serialVersionUID = 1L;
@@ -540,7 +540,45 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 				//setStartTime(startTime, req);
 			}
 		};
+	}*/
+
+	private void initRow10MinMaxTable(WidgetPage<?> page) {
+		if(!Boolean.getBoolean("de.iwes.widgets.reswidget.scheduleviewer.api.showMinMax"))
+			return;
+		
+		this.minMaxHeader =  new Header(page, "minMaxHeader",
+				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.minmaxheading", "Plot Data Summary"));
+		minMaxHeader.setDefaultHeaderType(3);
+		minMaxHeader.addDefaultStyle(HeaderData.TEXT_ALIGNMENT_CENTERED);
+
+		MinMaxTableConfiguration newConfig = new MinMaxTableConfiguration(alert);
+		this.minMaxTable = new MinMaxTable(page, "minMaxtable", newConfig, am) {
+
+			private static final long serialVersionUID = 1L;
+
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				boolean showCheckboxes = true;
+				GetPlotDataResult data = getSchedulesToPlot(showCheckboxes , req);
+				//List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
+				List<DefaultSchedulePresentationDataPlus> schedules = new ArrayList<>();
+				for(DefaultSchedulePresentationData input: data.schedData) {
+					schedules.add(new DefaultSchedulePresentationDataPlus(
+							input, data.startTime, data.endTime));
+				}
+				//setSchedule(schedules, req);
+				//long startTime = scheduleStartPicker.getDateLong(req);
+				//setStartTime(startTime, req);
+				onGETInternal(schedules, req);
+				
+				super.onGET(req);
+			}
+		};
+		//page.append(this.minMaxTable).linebreak();
 	}
+	
+	
+	
 
 	/**
 	 * Initializes the row of the dynamicTable with a Intervall and a Start-

@@ -31,7 +31,8 @@ import de.iwes.widgets.html.complextable.DynamicTableData;
  * 
  * This is always a global widget, but the table displaying the data may show session-specific data
  */
-public class MinMaxTable extends DynamicTable<DefaultSchedulePresentationDataPlus> {
+@Deprecated
+public class MinMaxTablePageSnippet extends PageSnippet {
 
 	/**
 	 * Use this to trigger an update of other widgets upon changes made to a schedule via this widget.
@@ -40,7 +41,7 @@ public class MinMaxTable extends DynamicTable<DefaultSchedulePresentationDataPlu
 	
 	private static final long serialVersionUID = 550753654103033620L;   
 	private List<DefaultSchedulePresentationDataPlus> defaultSchedule = null;
-	//protected final DynamicTable<DefaultSchedulePresentationDataPlus> table;  // TODO make this an actual subwidget; must be destroyed upon destruction of the manipulator?
+	protected final DynamicTable<DefaultSchedulePresentationDataPlus> table;  // TODO make this an actual subwidget; must be destroyed upon destruction of the manipulator?
 	
 	public final ApplicationManager appMan;
 	/*
@@ -49,35 +50,67 @@ public class MinMaxTable extends DynamicTable<DefaultSchedulePresentationDataPlu
     /** 
      * Default constructor: session dependent 
      */
-    public MinMaxTable(WidgetPage<?> page, String id) {
+    public MinMaxTablePageSnippet(WidgetPage<?> page, String id) {
         this(page, id, null);
 	}
     
-    public MinMaxTable(WidgetPage<?> page, String id, MinMaxTableConfiguration config,
+    public MinMaxTablePageSnippet(WidgetPage<?> page, String id, MinMaxTableConfiguration config,
     		ApplicationManager appMan) {
         this(page, id, false, config, appMan);
 	}
-    public MinMaxTable(WidgetPage<?> page, String id, MinMaxTableConfiguration config) {
+    public MinMaxTablePageSnippet(WidgetPage<?> page, String id, MinMaxTableConfiguration config) {
         this(page, id, false, config);
 	}
     
-    public MinMaxTable(WidgetPage<?> page, String id, boolean globalWidget, MinMaxTableConfiguration config) {
+    public MinMaxTablePageSnippet(WidgetPage<?> page, String id, boolean globalWidget, MinMaxTableConfiguration config) {
     	this(page, id, globalWidget, config, null);
     }
-    public MinMaxTable(WidgetPage<?> page, String id, boolean globalWidget, MinMaxTableConfiguration config,
+    public MinMaxTablePageSnippet(WidgetPage<?> page, String id, boolean globalWidget, MinMaxTableConfiguration config,
     		ApplicationManager appMan) {
-        super(page, id + "__MMA__table", globalWidget); // this itself is always a global widget
+        super(page, id, true); // this itself is always a global widget
         this.appMan = appMan;
         if (config == null)
         	config = new MinMaxTableConfiguration();
- 
-        MinMaxTableRowTemplate  rowTemplate = new MinMaxTableRowTemplate(this,config.getAlert());
-        setRowTemplate(rowTemplate);
-        addDefaultStyle(DynamicTableData.CELL_ALIGNMENT_RIGHT);
+        this.table = new DynamicTable<DefaultSchedulePresentationDataPlus>(page, id + "__MMA__table", globalWidget) {
 
-        //this.triggerAction(table, TriggeringAction.GET_REQUEST, TriggeredAction.GET_REQUEST);
-        //this.triggerAction(this, SCHEDULE_CHANGED, TriggeredAction.GET_REQUEST);
-        //this.triggerAction(this, TriggeringAction.POST_REQUEST, TriggeredAction.GET_REQUEST);
+			private static final long serialVersionUID = 1L;
+			
+			/*private List<DefaultSchedulePresentationDataPlus> getValues(OgemaHttpRequest req) {
+				final TimeSeries schedule = getSchedule(req);
+				if (schedule == null)
+					return Collections.emptyList();
+				final List<DefaultSchedulePresentationDataPlus> values = new ArrayList<>();
+				values.add(MinMaxTableData.HEADER_LINE_ID);
+				if (isAllowPointAddition(req)) {
+					values.add(MinMaxTableData.NEW_LINE_ID);
+				}
+				final long startTime = startTimePicker.getDateLong(req);
+				final Iterator<SampledValue> it = getSchedule(req).iterator(startTime, Long.MAX_VALUE);
+				final int nrValues = nrItemsDropdown.getSelectedItem(req);
+				int cnt = 0;
+				while (cnt++ < nrValues && it.hasNext()) {
+					values.add(it.next().getTimestamp());
+				}
+				return values;
+			}*/
+        	
+			@Override
+			public void onGET(OgemaHttpRequest req) {
+				List<DefaultSchedulePresentationDataPlus> data = getSchedule(req);
+				//clear(req);
+				updateRows(data, req);
+				//updateRows(getValues(req),req);
+			}
+        	
+        };
+ 
+        MinMaxTableRowTemplatePageSnippet  rowTemplate = new MinMaxTableRowTemplatePageSnippet(table,this,config.getAlert());
+        table.setRowTemplate(rowTemplate);
+        table.addDefaultStyle(DynamicTableData.CELL_ALIGNMENT_RIGHT);
+
+        this.triggerAction(table, TriggeringAction.GET_REQUEST, TriggeredAction.GET_REQUEST);
+        this.triggerAction(this, SCHEDULE_CHANGED, TriggeredAction.GET_REQUEST);
+        this.triggerAction(this, TriggeringAction.POST_REQUEST, TriggeredAction.GET_REQUEST);
         
     	/*Flexbox fb = new Flexbox(page, id + "__XX__upperflexbox", true); // TODO Flexbox settings
         if (config.isShowInterpolationMode()) {
@@ -92,18 +125,10 @@ public class MinMaxTable extends DynamicTable<DefaultSchedulePresentationDataPlu
     	fb.setDefaultJustifyContent(JustifyContent.FLEX_LEFT);
     	this.append(fb, null);*/
         
-        //this.append(table,null).linebreak(null);
+        this.append(table,null).linebreak(null);
    }
     
-	//@Override
-	public void onGETInternal(List<DefaultSchedulePresentationDataPlus> data, OgemaHttpRequest req) {
-		//List<DefaultSchedulePresentationDataPlus> data = getSchedule(req);
-		//clear(req);
-		updateRows(data, req);
-		//updateRows(getValues(req),req);
-	}
-
-	/*
+    /*
      ******* Inherited methods ******/   
     
     /*
@@ -118,34 +143,34 @@ public class MinMaxTable extends DynamicTable<DefaultSchedulePresentationDataPlu
     	super.registerJsDependencies();
     }*/
 	
-	/*@Override
-	public MinMaxTableData createNewSession() {
-		MinMaxTableData opt = new MinMaxTableData(this);
+	@Override
+	public MinMaxTableDataPageSnippet createNewSession() {
+		MinMaxTableDataPageSnippet opt = new MinMaxTableDataPageSnippet(this);
 		return opt;
 	}
     
 	@Override
-	public MinMaxTableData getData(OgemaHttpRequest req) {
-		return (MinMaxTableData) super.getData(req);
+	public MinMaxTableDataPageSnippet getData(OgemaHttpRequest req) {
+		return (MinMaxTableDataPageSnippet) super.getData(req);
 	}
 	
 	@Override
 	protected void setDefaultValues(PageSnippetData opt) {
 		super.setDefaultValues(opt);
-		((MinMaxTableData) opt).setSchedule(defaultSchedule);
+		((MinMaxTableDataPageSnippet) opt).setSchedule(defaultSchedule);
 	}
 	
 	@Override
 	public void destroy() {
 		this.table.destroyWidget();
 		super.destroyWidget();
-	}*/
+	}
 	
 	
 	/*
 	 ************************* public methods ***********************/
 	
-	/*public List<DefaultSchedulePresentationDataPlus> getDefaultSchedule() {
+	public List<DefaultSchedulePresentationDataPlus> getDefaultSchedule() {
 		return defaultSchedule;
 	}
 
@@ -159,7 +184,7 @@ public class MinMaxTable extends DynamicTable<DefaultSchedulePresentationDataPlu
 
 	public void setSchedule(List<DefaultSchedulePresentationDataPlus> schedule, OgemaHttpRequest req) {
 		getData(req).setSchedule(schedule);
-	}*/
+	}
 	
 	/*
 	 ************************* internal methods, etc ***********************/	
