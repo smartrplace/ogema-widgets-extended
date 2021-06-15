@@ -758,8 +758,9 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		if (startTime > endTime)
 			startTime = endTime;
 		plot.setInterval(startTime, endTime, req);*/
-		Map<String, SchedulePresentationData> schedules = new LinkedHashMap<String, SchedulePresentationData>();
 		GetPlotDataResult plotData = getSchedulesToPlot(showCheckboxes, req);
+		plot.setInterval(plotData.startTime, plotData.endTime, req);
+		Map<String, SchedulePresentationData> schedules = new LinkedHashMap<String, SchedulePresentationData>();
 		for(DefaultSchedulePresentationData schedData: plotData.schedData) {
 			schedules.put(schedData.label, schedData);			
 		}
@@ -1562,7 +1563,10 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	
 	SessionConfiguration getSessionConfiguration(OgemaHttpRequest req) {
 		String configurationId = ScheduleViewerUtil.getPageParameter(req, page, PARAM_SESSION_CONFIG_ID);
-		return configProvider(req).getSessionConfiguration(configurationId);
+		SessionConfiguration result = configProvider(req).getSessionConfiguration(configurationId);
+		if(result == null)
+			return null;
+		return result;
 	}
 	
 	/*private boolean isWrongProvider(OgemaHttpRequest req) {

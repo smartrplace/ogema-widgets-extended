@@ -96,6 +96,7 @@ public class MinMaxTable extends PageSnippet {
 			@Override
 			public void onGET(OgemaHttpRequest req) {
 				List<DefaultSchedulePresentationDataPlus> data = getSchedule(req);
+				//clear(req);
 				updateRows(data, req);
 				//updateRows(getValues(req),req);
 			}
@@ -107,7 +108,8 @@ public class MinMaxTable extends PageSnippet {
         table.addDefaultStyle(DynamicTableData.CELL_ALIGNMENT_RIGHT);
 
         this.triggerAction(table, TriggeringAction.GET_REQUEST, TriggeredAction.GET_REQUEST);
-        //this.triggerAction(this, SCHEDULE_CHANGED, TriggeredAction.GET_REQUEST);
+        this.triggerAction(this, SCHEDULE_CHANGED, TriggeredAction.GET_REQUEST);
+        this.triggerAction(this, TriggeringAction.POST_REQUEST, TriggeredAction.GET_REQUEST);
         
     	/*Flexbox fb = new Flexbox(page, id + "__XX__upperflexbox", true); // TODO Flexbox settings
         if (config.isShowInterpolationMode()) {

@@ -19,6 +19,9 @@ import java.util.List;
 
 import org.ogema.core.channelmanager.measurements.SampledValue;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
+import org.ogema.tools.resource.util.TimeUtils;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
 import de.iwes.widgets.api.widgets.WidgetPage;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
@@ -36,7 +39,7 @@ public class ViewerDatepicker extends Datepicker {
 		Long explicitDate = null;
 		boolean fixedInterval = false;
 		boolean init = true;
-		boolean initBug = true;
+		//boolean initBug = true;
 
 		public ViewerDatepickerData(ViewerDatepicker datepicker) {
 			super(datepicker);
@@ -48,6 +51,7 @@ public class ViewerDatepicker extends Datepicker {
 
 	private final ScheduleViewerExtended schedView;
 	private final WidgetPage<?> page;
+	private final Logger logger = LoggerFactory.getLogger(getClass());
 	public ViewerDatepicker(WidgetPage<?> page, String id, boolean isStartDatepicker,
 			ScheduleViewerExtended schedView) {
 		super(page, id);
@@ -75,7 +79,7 @@ public class ViewerDatepicker extends Datepicker {
 		//}
 		final SessionConfiguration sessionConfig = schedView.getSessionConfiguration(req);
 
-		if (getData(req).init || getData(req).initBug) {
+		synchronized(req) { if (getData(req).init) {
 			ScheduleViewerConfiguration vc = sessionConfig.viewerConfiguration();
 			Long[] vcTime = null;
 			if(vc != null) {
@@ -99,15 +103,16 @@ public class ViewerDatepicker extends Datepicker {
 				}
 			}
 
-			// FIXME: triggering bug: Widget is calles two times by opening Page - without
+logger.debug("Set "+(isStartDatepicker?"startTime":"endTime")+" to "+TimeUtils.getDateAndTimeString(isStartDatepicker?time[0]:time[1]));
+			// FIXME: triggering bug: Widget is called twice by opening Page - without
 			// manualy triggerAction at GET
-			if (getData(req).initBug) {
-				getData(req).initBug = false;
-				return;
-			}
+			//if (getData(req).initBug) {
+			//	getData(req).initBug = false;
+			//	return;
+			//}
 			getData(req).init = false;
 			return;
-		}
+		}}
 
 		boolean fixInterval;
 		if(Boolean.getBoolean("org.ogema.app.timeseries.viewer.expert.gui.usemultiselectbybuttons")) {

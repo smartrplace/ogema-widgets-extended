@@ -101,7 +101,7 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 	public String getLineId(DefaultSchedulePresentationDataPlus timestamp) {
 		if (timestamp == null)
 			return "_" + MinMaxTableData.NEW_LINE_ID; 
-		return WidgetHelper.getValidWidgetId(timestamp.data.getLabel(null));
+		return WidgetHelper.getValidWidgetId(timestamp.data.getLabel(null)+"_"+timestamp.id);
 	}
 	
 	// FIXME
