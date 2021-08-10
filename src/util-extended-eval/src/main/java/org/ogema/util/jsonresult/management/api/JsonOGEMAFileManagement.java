@@ -31,7 +31,7 @@ public interface JsonOGEMAFileManagement<T, D extends JsonOGEMAFileData> {
 	public static final String EXPERIMENTAL_FOLDER_NAME = "experiment";
 	public static final String MAJOR_FOLDER_NAME = "major";
 	
-	public static final String DEFAULT_WORKSPACE_NAME = "DefaultWS";
+	public static final String DEFAULT_WORKSPACE_NAME = "DefaultWS3";
 	
 	/** Register a result class so that files that store a result of this class can be opened
 	 * by the management
@@ -79,6 +79,7 @@ public interface JsonOGEMAFileManagement<T, D extends JsonOGEMAFileData> {
 	 * @return
 	 */
 	<M extends T> M importFromJSON(String fileNameWithPath, String resultClassName);
+	<M extends T> M importFromJSON(String fileNameWithPath, Class<M> resultClass);
 	
 	/** Save a result into a file and create a file descriptor resource.
 	 * 

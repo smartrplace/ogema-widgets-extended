@@ -182,6 +182,10 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 	public <M extends T> M importFromJSON(String fileNameWithPath, String resultClassName) {
 		@SuppressWarnings("unchecked")
 		Class<M> resultClass = (Class<M>) knownClasses.get(resultClassName);
+		return importFromJSON(fileNameWithPath, resultClass);
+	}
+	@Override
+	public <M extends T> M importFromJSON(String fileNameWithPath, Class<M> resultClass) {
 		if(resultClass == null)
 			return null;
 		M result = MultiEvaluationUtils.importFromJSON(fileNameWithPath, resultClass);
