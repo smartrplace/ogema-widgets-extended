@@ -21,6 +21,7 @@ import java.util.List;
 
 import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider;
 import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProviderPreEvalRequesting;
+import de.iwes.timeseries.eval.generic.gatewayBackupAnalysis.GaRoTestStarter;
 import de.iwes.widgets.api.widgets.WidgetPage;
 import de.iwes.widgets.api.widgets.localisation.OgemaLocale;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
@@ -29,7 +30,7 @@ import de.iwes.widgets.html.form.label.Label;
 import de.iwes.widgets.template.DisplayTemplate;
 
 public class PreEvalSelectDropdown extends TemplateDropdown<File> {
-	public static final String FILE_PATH = System.getProperty("de.iwes.tools.timeseries-multieval.resultpath", "../evaluationresults");
+	public static final String FILE_PATH = GaRoTestStarter.FILE_PATH; //System.getProperty("de.iwes.tools.timeseries-multieval.resultpath", "../evaluationresults");
 
 
 	private static final long serialVersionUID = 1L;

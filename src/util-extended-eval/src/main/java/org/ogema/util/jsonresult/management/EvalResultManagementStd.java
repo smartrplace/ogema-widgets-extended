@@ -28,13 +28,14 @@ import org.osgi.framework.BundleContext;
 import org.osgi.framework.ServiceRegistration;
 import org.smartrplace.util.format.ValueFormat;
 
+import de.iwes.timeseries.eval.generic.gatewayBackupAnalysis.GaRoTestStarter;
 import de.iwes.util.timer.AbsoluteTiming;
 
 /** Standard Eval result management*/
 @Component(specVersion = "1.2", immediate = true)
 @Service(Application.class)
 public class EvalResultManagementStd implements Application {
-	public static final String FILE_PATH = System.getProperty("de.iwes.tools.timeseries-multieval.resultpath", "../evaluationresults");
+	public static final String FILE_PATH = GaRoTestStarter.FILE_PATH; //System.getProperty("de.iwes.tools.timeseries-multieval.resultpath", "../evaluationresults");
 	
 	public static final int STANDARD_MULTIEVAL_INTERVAL_STEP = Integer.getInteger("org.ogema.multieval.base_interval_type", 
 			AbsoluteTiming.DAY);

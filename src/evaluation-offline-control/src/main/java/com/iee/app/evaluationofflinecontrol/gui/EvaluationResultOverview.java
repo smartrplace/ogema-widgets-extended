@@ -30,6 +30,7 @@ import com.iee.app.evaluationofflinecontrol.OfflineEvaluationControlController;
 
 import de.iwes.timeseries.eval.api.extended.util.MultiEvaluationUtils;
 import de.iwes.timeseries.eval.garo.multibase.GaRoSingleEvalProvider;
+import de.iwes.timeseries.eval.generic.gatewayBackupAnalysis.GaRoTestStarter;
 import de.iwes.widgets.api.extended.WidgetData;
 import de.iwes.widgets.api.widgets.WidgetPage;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
@@ -49,7 +50,7 @@ public class EvaluationResultOverview {
 	private final OfflineEvaluationControlController controller;
 	private final ResultTypesPopup resultTypePopup;
 	private final DynamicTable<GaRoSingleEvalProvider> table;
-	private final String FILE_PATH = System.getProperty("de.iwes.tools.timeseries-multieval.resultpath", "../evaluationresults");
+	private final String FILE_PATH = GaRoTestStarter.FILE_PATH; //System.getProperty("de.iwes.tools.timeseries-multieval.resultpath", "../evaluationresults");
 	private int id = 0;
 	public EvaluationResultOverview(final WidgetPage<?> page, final OfflineEvaluationControlController app) {
 		
