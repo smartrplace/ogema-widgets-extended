@@ -22,6 +22,7 @@ import org.ogema.model.prototypes.Data;
 public interface JsonOGEMAFileManagementData extends Data {
 	ResourceList<JsonOGEMAWorkspaceData> workspaceData();
 	
+	@Deprecated //use path defined by property only
 	StringResource basePath();
 	/** Reference to last workspace used*/
 	JsonOGEMAWorkspaceData lastWorkspaceUsed();

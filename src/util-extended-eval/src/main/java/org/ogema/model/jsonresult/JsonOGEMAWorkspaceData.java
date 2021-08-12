@@ -23,5 +23,6 @@ import org.ogema.model.prototypes.Data;
 public interface JsonOGEMAWorkspaceData extends Data {
 	ResourceList<JsonOGEMAFileData> fileData();
 	
+	@Deprecated //only use property
 	StringResource workspacePath();
 }

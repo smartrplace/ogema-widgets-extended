@@ -70,7 +70,7 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		initAppData(basePath);
 	}
 	private void initAppData(String basePath) {
-		appData.basePath().<StringResource>create().setValue(basePath);
+		//appData.basePath().<StringResource>create().setValue(basePath);
 		appData.workspaceData().create();
 		//usually we create default workspace here and activate everything afterwards
 		init();
@@ -243,8 +243,8 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 			newWS = appData.workspaceData().addDecorator(resName,
 					JsonOGEMAWorkspaceData.class);
 			newWS.fileData().create();
-			newWS.workspacePath().<StringResource>create().setValue(
-					Paths.get(appData.basePath().getValue(), resName).toString());
+			//newWS.workspacePath().<StringResource>create().setValue(
+			//		Paths.get(appData.basePath().getValue(), resName).toString());
 			newWS.name().<StringResource>create().setValue(workspace);
 			if(appData.isActive()) newWS.activate(true);
 		}
@@ -276,9 +276,9 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		} else {
 			resName = ResourceUtils.getValidResourceName(workspace);
 		}*/
-		JsonOGEMAWorkspaceData wsLoc;
-		if(workspace == null) wsLoc = currentWorkspace;
-		else wsLoc = getWorkspaceData(workspace);
+		//JsonOGEMAWorkspaceData wsLoc;
+		//if(workspace == null) wsLoc = currentWorkspace;
+		//else wsLoc = getWorkspaceData(workspace);
 		String statusName;
 		if(status == 1) statusName = TEMPORARY_FOLDER_NAME;
 		else if(status == 10) statusName = EXPERIMENTAL_FOLDER_NAME;
@@ -287,10 +287,12 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		//String basePath = appData.basePath().getValue();
 		//if(workSpaceRelativePath == null) return Paths.get(basePath, resName, statusName).toString();
 		//return Paths.get(appData.basePath().getValue(), resName, statusName, workSpaceRelativePath).toString();
-		JsonOGEMAWorkspaceData ws = wsLoc.getLocationResource();
-		String wsPath = ws.workspacePath().getValue(); //currentWorkspace.workspacePath().getValue();
+		///JsonOGEMAWorkspaceData ws = wsLoc.getLocationResource();
+		//String wsPath = ws.workspacePath().getValue(); //currentWorkspace.workspacePath().getValue();
+		String resName = workspace!=null?ResourceUtils.getValidResourceName(workspace):currentWorkspace.getName();
+		String wsPath = Paths.get(EvalResultManagementStd.FILE_PATH, resName).toString();
 		if(workSpaceRelativePath == null) return Paths.get(wsPath, statusName).toString();
-		return Paths.get(wsLoc.workspacePath().getValue(), statusName, workSpaceRelativePath).toString();
+		return Paths.get(wsPath, statusName, workSpaceRelativePath).toString();
 	}
 	
 	@Override
