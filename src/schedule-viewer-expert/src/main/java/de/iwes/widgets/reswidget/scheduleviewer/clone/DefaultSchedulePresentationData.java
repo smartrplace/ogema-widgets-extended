@@ -23,9 +23,9 @@ import org.ogema.core.channelmanager.measurements.SampledValue;
 import org.ogema.core.model.simple.SingleValueResource;
 import org.ogema.core.timeseries.InterpolationMode;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
+import org.ogema.humread.valueconversion.SchedulePresentationData;
 
 import de.iwes.widgets.api.widgets.localisation.OgemaLocale;
-import de.iwes.widgets.reswidget.scheduleviewer.api.SchedulePresentationData;
 
 /**
  * Use to display MemoryTimeSeries in a ScheduleViewer, or to provide a custom label

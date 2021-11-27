@@ -42,7 +42,6 @@ import org.ogema.util.directresourcegui.kpi.KPIStatisticsUtil;
 import org.ogema.util.evalcontrol.EvalScheduler.OverwriteMode;
 import org.ogema.util.jsonresult.management.JsonOGEMAFileManagementImpl;
 import org.ogema.util.jsonresult.management.api.EvalResultManagement;
-import org.ogema.widgets.reswidget.schedulecsvdownload.expert.ScheduleCsvDownloadExpert;
 
 import com.iee.app.evaluationofflinecontrol.OfflineEvalServiceAccess;
 import com.iee.app.evaluationofflinecontrol.OfflineEvaluationControlController;
@@ -91,6 +90,7 @@ import de.iwes.widgets.html.form.textfield.TextField;
 import de.iwes.widgets.html.multiselect.TemplateMultiselect;
 import de.iwes.widgets.multiselect.extended.MultiSelectExtended;
 import de.iwes.widgets.resource.widget.textfield.BooleanResourceCheckbox;
+import de.iwes.widgets.reswidget.schedulecsvdownload.ScheduleCsvDownload;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfiguration;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfigurationBuilder;
 import de.iwes.widgets.reswidget.scheduleviewer.api.TimeSeriesFilter;
@@ -1148,10 +1148,10 @@ public class OfflineEvaluationControl {
 			try {
 				List<TimeSeriesFilterExtended> filters = ScheduleViewerOpenButtonEval.getTimeSeriesWithFilters(
 						input, config, nameProvider).filters;
-				ScheduleCsvDownloadExpert.exportFile(intv.start, intv.end,
+				ScheduleCsvDownload.exportFile(intv.start, intv.end,
 						schedules,
 						dest, "csvBulk",
-						false, filters, 5);
+						false, filters, 5, null);
 				System.out.println("Bulk export to "+dest+" done.");
 			} catch (IOException e) {
 				e.printStackTrace();

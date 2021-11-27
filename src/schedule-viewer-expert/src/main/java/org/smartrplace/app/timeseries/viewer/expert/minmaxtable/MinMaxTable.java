@@ -17,10 +17,7 @@ import java.util.List;
 
 import org.ogema.core.application.ApplicationManager;
 
-import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
-import de.iwes.widgets.api.extended.html.bricks.PageSnippetData;
 import de.iwes.widgets.api.widgets.WidgetPage;
-import de.iwes.widgets.api.widgets.dynamics.TriggeredAction;
 import de.iwes.widgets.api.widgets.dynamics.TriggeringAction;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
 import de.iwes.widgets.html.complextable.DynamicTable;
@@ -49,29 +46,23 @@ public class MinMaxTable extends DynamicTable<DefaultSchedulePresentationDataPlu
     /** 
      * Default constructor: session dependent 
      */
-    public MinMaxTable(WidgetPage<?> page, String id) {
-        this(page, id, null);
-	}
-    
-    public MinMaxTable(WidgetPage<?> page, String id, MinMaxTableConfiguration config,
+    public MinMaxTable(WidgetPage<?> page, String id, 
     		ApplicationManager appMan) {
-        this(page, id, false, config, appMan);
+        this(page, id, false, appMan);
 	}
-    public MinMaxTable(WidgetPage<?> page, String id, MinMaxTableConfiguration config) {
-        this(page, id, false, config);
+    public MinMaxTable(WidgetPage<?> page, String id) {
+        this(page, id, false);
 	}
     
-    public MinMaxTable(WidgetPage<?> page, String id, boolean globalWidget, MinMaxTableConfiguration config) {
-    	this(page, id, globalWidget, config, null);
+    public MinMaxTable(WidgetPage<?> page, String id, boolean globalWidget) {
+    	this(page, id, globalWidget, null);
     }
-    public MinMaxTable(WidgetPage<?> page, String id, boolean globalWidget, MinMaxTableConfiguration config,
+    public MinMaxTable(WidgetPage<?> page, String id, boolean globalWidget,
     		ApplicationManager appMan) {
         super(page, id + "__MMA__table", globalWidget); // this itself is always a global widget
         this.appMan = appMan;
-        if (config == null)
-        	config = new MinMaxTableConfiguration();
  
-        MinMaxTableRowTemplate  rowTemplate = new MinMaxTableRowTemplate(this,config.getAlert());
+        MinMaxTableRowTemplate  rowTemplate = new MinMaxTableRowTemplate(this);
         setRowTemplate(rowTemplate);
         addDefaultStyle(DynamicTableData.CELL_ALIGNMENT_RIGHT);
 

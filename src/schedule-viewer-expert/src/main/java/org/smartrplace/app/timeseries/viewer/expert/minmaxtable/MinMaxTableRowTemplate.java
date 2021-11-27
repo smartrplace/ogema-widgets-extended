@@ -34,6 +34,7 @@ import de.iwes.widgets.html.form.label.Label;
 // FIXME adding session dependent widgets to widget group?
 public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentationDataPlus> {
 	public static final float COMMENT_ONLY_VALUE_TS = -99876;
+	protected final static long NEW_LINE_ID = Long.MIN_VALUE;
 	
 	// this is the DynamicTable widget
 	private final OgemaWidget parent;
@@ -107,7 +108,7 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 	@Override
 	public String getLineId(DefaultSchedulePresentationDataPlus timestamp) {
 		if (timestamp == null)
-			return "_" + MinMaxTableData.NEW_LINE_ID; 
+			return "_" + NEW_LINE_ID; 
 		return WidgetHelper.getValidWidgetId(timestamp.data.getLabel(null)+"_"+timestamp.id);
 	}
 	

@@ -25,6 +25,7 @@ import org.ogema.core.model.simple.SingleValueResource;
 import org.ogema.core.model.simple.StringResource;
 import org.ogema.core.model.units.TemperatureResource;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
+import org.ogema.humread.valueconversion.SchedulePresentationData;
 
 import com.google.common.cache.Cache;
 import com.google.common.cache.CacheBuilder;
@@ -42,7 +43,6 @@ import de.iwes.widgets.resource.timeseries.OnlineTimeSeriesCache;
 import de.iwes.widgets.resource.widget.autocomplete.ResourcePathAutocomplete;
 import de.iwes.widgets.reswidget.scheduleviewer.DefaultSchedulePresentationData;
 import de.iwes.widgets.reswidget.scheduleviewer.ScheduleViewerBasic;
-import de.iwes.widgets.reswidget.scheduleviewer.api.SchedulePresentationData;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfiguration;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfigurationBuilder;
 import de.iwes.widgets.template.DisplayTemplate;

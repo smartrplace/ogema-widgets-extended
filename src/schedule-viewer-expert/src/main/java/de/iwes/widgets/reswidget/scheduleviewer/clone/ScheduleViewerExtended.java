@@ -39,13 +39,14 @@ import org.ogema.core.model.simple.SingleValueResource;
 import org.ogema.core.model.simple.StringResource;
 import org.ogema.core.recordeddata.RecordedData;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
+import org.ogema.humread.valueconversion.SchedulePresentationData;
+import org.ogema.model.chartexportconfig.ChartExportConfig;
 import org.ogema.util.extended.eval.widget.MultiSelectByButtons;
-import org.ogema.widgets.reswidget.schedulecsvdownload.expert.ScheduleCsvDownloadExpert;
 import org.ogema.widgets.reswidget.scheduleviewer.api.expert.ext.ScheduleViewerConfigurationExpert;
 import org.smartrplace.app.timeseries.viewer.expert.minmaxtable.DefaultSchedulePresentationDataPlus;
 import org.smartrplace.app.timeseries.viewer.expert.minmaxtable.MinMaxTable;
-import org.smartrplace.app.timeseries.viewer.expert.minmaxtable.MinMaxTableConfiguration;
 
+import de.iwes.util.resource.ResourceHelper;
 import de.iwes.widgets.api.extended.html.bricks.PageSnippet;
 import de.iwes.widgets.api.widgets.OgemaWidget;
 import de.iwes.widgets.api.widgets.WidgetPage;
@@ -69,6 +70,8 @@ import de.iwes.widgets.html.plot.api.Plot2DConfiguration;
 import de.iwes.widgets.html.plot.api.PlotType;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulator;
 import de.iwes.widgets.html.schedulemanipulator.ScheduleManipulatorConfiguration;
+import de.iwes.widgets.reswidget.schedulecsvdownload.ScheduleCsvDownload;
+import de.iwes.widgets.reswidget.schedulecsvdownload.ScheduleCsvDownloadSchedPres;
 import de.iwes.widgets.reswidget.scheduleplot.api.ScheduleData;
 import de.iwes.widgets.reswidget.scheduleplot.api.TimeSeriesPlot;
 import de.iwes.widgets.reswidget.scheduleplot.container.PlotTypeSelector;
@@ -76,7 +79,6 @@ import de.iwes.widgets.reswidget.scheduleplot.flot.SchedulePlotFlot;
 import de.iwes.widgets.reswidget.scheduleplot.plotlyjs.SchedulePlotlyjs;
 import de.iwes.widgets.reswidget.scheduleviewer.ResourceScheduleViewer;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ConditionalTimeSeriesFilter;
-import de.iwes.widgets.reswidget.scheduleviewer.api.SchedulePresentationData;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewer;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfiguration;
 import de.iwes.widgets.reswidget.scheduleviewer.api.ScheduleViewerConfigurationProvider;
@@ -124,7 +126,7 @@ import de.iwes.widgets.template.DisplayTemplate;
  * 
  * @author cnoelle, skarge
  */
-@SuppressWarnings({ "deprecation", "rawtypes", "unchecked" })
+@SuppressWarnings({ "deprecation" })
 public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewer<ReadOnlyTimeSeries> {
 
 	private static final long serialVersionUID = 8360241089115449033L;
@@ -213,7 +215,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 	protected TimeSeriesPlot<?,?,?> schedulePlot;
 	protected ScheduleManipulator manipulator;
 	protected Header manipulatorHeader;
-	protected ScheduleCsvDownloadExpert<ReadOnlyTimeSeries> csvDownload;
+	protected ScheduleCsvDownload<SchedulePresentationData> csvDownload;
 	protected Header downloadHeader;
 	
 	protected MinMaxTable minMaxTable;
@@ -368,25 +370,6 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		} else {
 			this.filterSelectorLabels = new ArrayList<>();
 			this.filterSelectors = new ArrayList<>();
-			Label filterSelectorLabel;
-			ConditionalProgramSelector filterSelector;
-			int cnt = 0;
-			/*for (Map<String, ConditionalTimeSeriesFilter<?>> filters : config.filters) {
-				filterSelectorLabel = new Label(page, id + "_filterSelectorLabel_" + cnt, "Select a filter");
-				filterSelector = new ConditionalProgramSelector(page, id + "_filterSelector" + cnt++, filters,
-						am.getResourcePatternAccess(), sessionConfig) {
-
-					private static final long serialVersionUID = 1L;
-
-					@Override
-					public void updateDependentWidgets(OgemaHttpRequest req) {
-						scheduleSelector.updateByProgramOrFilterChange(req);
-					}
-				};
-
-				filterSelectorLabels.add(filterSelectorLabel);
-				filterSelectors.add(filterSelector);
-			}*/
 		}
 	}
 
@@ -412,7 +395,9 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		downloadHeader.setDefaultHeaderType(3);
 		//downloadHeader.addStyle(HtmlStyle.ALIGNED_CENTER);
 		downloadHeader.addDefaultStyle(HeaderData.TEXT_ALIGNMENT_CENTERED);
-		this.csvDownload = new ScheduleCsvDownloadExpert<ReadOnlyTimeSeries>(page, id + "_dataDownload", am.getWebAccessManager()) {
+		ChartExportConfig configRes = ResourceHelper.getLocalGwInfo(am).chartExportConfig();
+		this.csvDownload = new ScheduleCsvDownloadSchedPres(page, id + "_dataDownload", am.getWebAccessManager(),
+				configRes ) {
 
 			private static final long serialVersionUID = 1L;
 
@@ -424,7 +409,18 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 					setWidgetVisibility(false, req);
 					return;
 				}
-				List<Collection<TimeSeriesFilter>> programs = ScheduleSelector.parseFilters(configuration(req).programs);// sessionconfig.programsPreselected();
+				
+				boolean showCheckboxes = true;
+				GetPlotDataResult data = getSchedulesToPlot(showCheckboxes , req);
+				//List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
+				List<SchedulePresentationData> schedules = new ArrayList<>();
+				for(DefaultSchedulePresentationData input: data.schedData) {
+					schedules.add(input);
+				}
+				this.setSchedules(schedules, req);
+
+				//FIXME: Remove
+				/*List<Collection<TimeSeriesFilter>> programs = ScheduleSelector.parseFilters(configuration(req).programs);// sessionconfig.programsPreselected();
 				List<Collection<TimeSeriesFilterExtended>> filterCollection = ScheduleViewerUtil.getInstance()
 						.parse(programs, am.getResourceAccess());
 				List<TimeSeriesFilterExtended> filters = new ArrayList<>();
@@ -432,7 +428,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 					filters.addAll(item);
 				}	
 				
-				this.setSchedules(scheduleSelector(req).getSelectedItems(req), filters, req);
+				this.setSchedules(scheduleSelector(req).getSelectedItems(req), filters, req);*/
 			}
 		};
 	}
@@ -493,55 +489,6 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		};
 	}
 
-	/**
-	 * Initializes the row of the dynamicTable with a MinMaxTable
-	 * 
-	 * @param page
-	 */
-	/*private void initRow10MinMaxTable(WidgetPage<?> page) {
-		this.minMaxHeader =  new Header(page, "minMaxHeader",
-				System.getProperty("org.ogema.app.timeseries.viewer.expert.gui.minmaxheading", "Plot Data Summary")) {
-			private static final long serialVersionUID = 1L;
-			@Override
-			public void onGET(OgemaHttpRequest req) {
-				if (configuration(req).showMinMaxTable || isExpertMode(req)) {
-					setWidgetVisibility(true, req);
-				} else {
-					setWidgetVisibility(false, req);
-				}
-			}
-		};
-		minMaxHeader.setDefaultHeaderType(3);
-		minMaxHeader.addDefaultStyle(HeaderData.TEXT_ALIGNMENT_CENTERED);
-
-		MinMaxTableConfiguration newConfig = new MinMaxTableConfiguration(alert);
-		this.minMaxTable = new MinMaxTable(page, "minMaxtable", newConfig, am) {
-
-			private static final long serialVersionUID = 1L;
-
-			@Override
-			public void onGET(OgemaHttpRequest req) {
-				if (configuration(req).showMinMaxTable || isExpertMode(req)) {
-					setWidgetVisibility(true, req);
-				} else {
-					setWidgetVisibility(false, req);
-					return;
-				}
-				boolean showCheckboxes = true;
-				GetPlotDataResult data = getSchedulesToPlot(showCheckboxes , req);
-				//List<ReadOnlyTimeSeries> selectedSchedules = scheduleSelector(req).getSelectedItems(req);
-				List<DefaultSchedulePresentationDataPlus> schedules = new ArrayList<>();
-				for(DefaultSchedulePresentationData input: data.schedData) {
-					schedules.add(new DefaultSchedulePresentationDataPlus(
-							input, data.startTime, data.endTime));
-				}
-				setSchedule(schedules, req);
-				//long startTime = scheduleStartPicker.getDateLong(req);
-				//setStartTime(startTime, req);
-			}
-		};
-	}*/
-
 	private void initRow10MinMaxTable(WidgetPage<?> page) {
 		if(!Boolean.getBoolean("de.iwes.widgets.reswidget.scheduleviewer.api.showMinMax"))
 			return;
@@ -551,8 +498,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		minMaxHeader.setDefaultHeaderType(3);
 		minMaxHeader.addDefaultStyle(HeaderData.TEXT_ALIGNMENT_CENTERED);
 
-		MinMaxTableConfiguration newConfig = new MinMaxTableConfiguration(alert);
-		this.minMaxTable = new MinMaxTable(page, "minMaxtable", newConfig, am) {
+		this.minMaxTable = new MinMaxTable(page, "minMaxtable", am) {
 
 			private static final long serialVersionUID = 1L;
 

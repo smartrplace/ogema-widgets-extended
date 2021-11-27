@@ -81,9 +81,14 @@
             <artifactId>widget-experimental</artifactId>
             <version>2.2.2-SNAPSHOT</version>
         </dependency>  
+ 		<dependency>
+            <groupId>org.ogema.widgets</groupId>
+            <artifactId>util-extended</artifactId>
+        </dependency>
         <dependency>
             <groupId>org.ogema.widgets</groupId>
             <artifactId>util-extended</artifactId>
+            <version>2.2.2-SNAPSHOT</version>
         </dependency>
 		<dependency>
             <groupId>org.smartrplace.apps</groupId>
