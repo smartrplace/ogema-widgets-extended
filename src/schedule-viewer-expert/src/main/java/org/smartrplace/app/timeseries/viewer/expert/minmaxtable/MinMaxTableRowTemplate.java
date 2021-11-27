@@ -20,10 +20,11 @@ import java.util.List;
 import java.util.Map;
 
 import org.ogema.core.channelmanager.measurements.SampledValue;
+import org.ogema.humread.valueconversion.HumanReadableValueConverter;
+import org.ogema.humread.valueconversion.HumanReadableValueConverter.LinearTransformation;
 import org.smartrplace.util.format.WidgetHelper;
 
 import de.iwes.widgets.api.widgets.OgemaWidget;
-import de.iwes.widgets.api.widgets.dynamics.TriggeredAction;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
 import de.iwes.widgets.html.alert.Alert;
 import de.iwes.widgets.html.complextable.RowTemplate;
@@ -37,10 +38,10 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 	// this is the DynamicTable widget
 	private final OgemaWidget parent;
 	// need this to trigger updates; will also trigger table update
-	private final MinMaxTable scheduleManipulator;
+	//private final MinMaxTable scheduleManipulator;
 	// note: the alert may be null
-	private final Alert alert;
-	private final static TriggeredAction SCHEDULE_CHANGED = new TriggeredAction("scheduleChanged");
+	//private final Alert alert;
+	//private final static TriggeredAction SCHEDULE_CHANGED = new TriggeredAction("scheduleChanged");
 	
 	public MinMaxTableRowTemplate(MinMaxTable scheduleManipulator) {
 		this(scheduleManipulator, null);
@@ -48,8 +49,8 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 	
 	public MinMaxTableRowTemplate(MinMaxTable scheduleManipulator,  Alert alert) {
 		this.parent = scheduleManipulator;
-		this.scheduleManipulator = scheduleManipulator;
-		this.alert = alert;
+		//this.scheduleManipulator = scheduleManipulator;
+		//this.alert = alert;
 	}
 	
 	@Override
@@ -59,6 +60,8 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 		
 		final Label nameLabel = new Label(parent, lineId+ "_commentLabel", object.data.getLabel(null),req);
 		row.addCell("Timeseries",nameLabel);
+		
+		LinearTransformation trans = HumanReadableValueConverter.getTransformationIfNonTrivial(object.data);
 		
 		List<SampledValue> vals = object.data.getValues(object.startTime, object.endTime);
 		double sum = 0;
@@ -86,7 +89,11 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 			return row;
 		}
 		float av = (float) (sum/count);
-				
+		
+		min = HumanReadableValueConverter.getHumanValue(min, trans);
+		max = HumanReadableValueConverter.getHumanValue(max, trans);
+		av = HumanReadableValueConverter.getHumanValue(av, trans);
+		
 		final Label minLabel = new Label(parent, lineId+ "_minLabel", String.format("%.1f", min),req);
 		row.addCell("Minimum", minLabel);
 		final Label maxLabel = new Label(parent, lineId+ "_maxLabel", String.format("%.1f", max),req);
