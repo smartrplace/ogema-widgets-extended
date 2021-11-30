@@ -74,7 +74,7 @@ public class ConfigurationPageChartExport {
 
 		
 		BooleanResourceCheckbox addLabelLine = new BooleanResourceCheckbox(page, "allLabelLine",
-				"", gwInfo.chartExportConfig().addLabels()) {
+				"", gwInfo.chartExportConfig().addIDLine()) {
 
 			@Override
 			public void onPrePOST(String data, OgemaHttpRequest req) {
@@ -110,35 +110,35 @@ public class ConfigurationPageChartExport {
 
 		StaticTable configTable = new StaticTable(8, 2);
 		int i = 0;
-		configTable.setContent(i, 0, "Show CSV configuration button in schedule viewer download Section:").
+		configTable.setContent(i, 0, "Show CSV configuration button in schedule viewer download Section").
 		setContent(i, 1, showConfigButton);
 		i++;
 		configTable.setContent(i, 0, "If selected than values will be exported with comma as decimal separator. Note that "
-				+ "semicolon is used as CSV separator anyways:").
+				+ "semicolon is used as CSV separator anyways").
 		setContent(i, 1, exportGermanExcelCSV);
 		i++;
-		configTable.setContent(i, 0, "Format to apply to time stamps like yyyy-MM-dd'T'HH:mm:ss. If empty standard\r\n" + 
+		configTable.setContent(i, 0, "Format to apply to time stamps like yyyy-MM-dd HH:mm:ss. If empty standard\r\n" + 
 				"	 * internal time stamps in milliseconds since epoch UTC are exported:").
 		setContent(i, 1, timeStampFormat);
 		i++;
 
-		configTable.setContent(i, 0, "Perform aggregated fixed-step export for CSV").
+		configTable.setContent(i, 0, "Perform multi-timeseries export for CSV with common timestamps (select stepsize of timestamps below)").
 		setContent(i, 1, offerFixedStepExport);
 		i++;
-		configTable.setContent(i, 0, "Add label line").
-		setContent(i, 1, addLabelLine);
-		i++;
-		configTable.setContent(i, 0, "Time step for fixed-step export (seconds)").
+		configTable.setContent(i, 0, "Time step for fixed-step export (seconds):").
 				setContent(i, 1, fixedTimeStepSeconds);
 		i++;
-		configTable.setContent(i, 0, "Maximum distance of last value in source is found before NaN or empty value is written. "
-				+ "Set to zero or Long.Max if this shall not occur.").
+		configTable.setContent(i, 0, "Maximum distance of last value in source is found before Not-a-Number (NaN) or empty value is written. "
+				+ "Set to zero if this shall not occur:").
 			setContent(i, 1, maxValidValueIntervalSeconds);
 		i++;
 		
-		configTable.setContent(i, 0, "NaN value to be used if next value in source is too far away (empty to skip these values):").
+		configTable.setContent(i, 0, "NaN value to be used if next value in source is too far away or invalid (empty to skip these values):").
 		setContent(i, 1, naNValue);
 		i++;		
+		configTable.setContent(i, 0, "Add line with time series IDs for multi-timeseries export (line with labels will be provided anyways)").
+		setContent(i, 1, addLabelLine);
+		i++;
 
 		page.append(configTable);
 	}

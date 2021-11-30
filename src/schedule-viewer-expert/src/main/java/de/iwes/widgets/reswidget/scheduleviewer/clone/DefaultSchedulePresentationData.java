@@ -20,7 +20,9 @@ import java.util.List;
 import java.util.Objects;
 
 import org.ogema.core.channelmanager.measurements.SampledValue;
+import org.ogema.core.model.Resource;
 import org.ogema.core.model.simple.SingleValueResource;
+import org.ogema.core.recordeddata.RecordedData;
 import org.ogema.core.timeseries.InterpolationMode;
 import org.ogema.core.timeseries.ReadOnlyTimeSeries;
 import org.ogema.humread.valueconversion.SchedulePresentationData;
@@ -97,6 +99,17 @@ public class DefaultSchedulePresentationData implements SchedulePresentationData
 		return label;
 	}
 
+	@Override
+	public String getID() {
+		if(parent != null)
+			return parent.getLocation();
+		if(rots instanceof Resource)
+			return ((Resource)rots).getLocation();
+		if(rots instanceof RecordedData)
+			return ((RecordedData)rots).getPath();
+		return getLabel(null)+"::"+getScheduleType();
+	}
+	
 	@Override
 	public Class<?> getScheduleType() {
 		return type;
@@ -191,5 +204,4 @@ public class DefaultSchedulePresentationData implements SchedulePresentationData
 	public int hashCode() {
 		return rots.hashCode() * 11 + (label != null ? label.hashCode() : 7); 
 	}
-	
 }
