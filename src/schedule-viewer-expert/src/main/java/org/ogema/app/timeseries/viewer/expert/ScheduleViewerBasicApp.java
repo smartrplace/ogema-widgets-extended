@@ -36,6 +36,7 @@ import org.apache.felix.scr.annotations.ReferencePolicy;
 import org.apache.felix.scr.annotations.References;
 import org.apache.felix.scr.annotations.Service;
 import org.ogema.app.timeseries.viewer.expert.dummyProvider.DummyScheduleViewerConfigurationProvider;
+import org.ogema.app.timeseries.viewer.expert.gui.ConfigurationPageChartExport;
 import org.ogema.app.timeseries.viewer.expert.gui.MainPage;
 import org.ogema.app.timeseries.viewer.expert.gui.OnlineDataViewerPage;
 import org.ogema.app.timeseries.viewer.expert.gui.ScheduleProviderOverviewPage;
@@ -106,15 +107,22 @@ public class ScheduleViewerBasicApp implements Application {
         new OnlineDataViewerPage(onlinePage, timeSeriesCache, appManager);
         new ScheduleProviderOverviewPage(overviewPage, appManager, this);
         
-        	// navigation menu
+        final WidgetPage<?> configPage = wApp.createWidgetPage("chartconfigPage.html");
+        new ConfigurationPageChartExport(configPage, appManager);
+
+        // navigation menu
         NavigationMenu customMenu = new NavigationMenu(" Select page");
 		customMenu.addEntry("View schedules", page);
-		customMenu.addEntry("View online data", onlinePage);
-		customMenu.addEntry("View ScheduleProvider Overivew", overviewPage);
+		customMenu.addEntry("Configuration", configPage);
+		//customMenu.addEntry("View online data", onlinePage);
+		//customMenu.addEntry("View ScheduleProvider Overivew", overviewPage);
 		MenuConfiguration mc = page.getMenuConfiguration();
 		mc.setCustomNavigation(customMenu);
 		changeMenuConfig(mc);
 		mc = onlinePage.getMenuConfiguration();
+		mc.setCustomNavigation(customMenu);
+		changeMenuConfig(mc);
+		mc = configPage.getMenuConfiguration();
 		mc.setCustomNavigation(customMenu);
 		changeMenuConfig(mc);
 		
