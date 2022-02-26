@@ -52,6 +52,7 @@ public abstract class IntegerMultiButton extends Button {
 			throw new IllegalStateException("State out of bounds:"+state+", optionColors size:"+optionColors.size());
 		String text = getText(state, req);
 		setText(text, req);
+		addStyle(optionColors.get(state), req);
 		/*for(int idx=0; idx<optionColors.size(); idx++) {
 			if(idx == state)
 				addStyle(optionColors.get(idx), req);
