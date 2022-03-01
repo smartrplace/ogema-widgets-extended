@@ -22,6 +22,9 @@ public abstract class IntegerMultiButton extends Button {
 	protected abstract String getText(int state, OgemaHttpRequest req);
 	protected abstract int getState(OgemaHttpRequest req);
 	protected abstract void setState(int state, OgemaHttpRequest req);
+	protected int getNextState(int prevstate, OgemaHttpRequest req) {
+		return prevstate+1;
+	}
 	
 	public IntegerMultiButton(OgemaWidget parent, String id, OgemaHttpRequest req, WidgetStyle<Button>[] optionColors) {
 		super(parent, id, req);
@@ -64,7 +67,7 @@ public abstract class IntegerMultiButton extends Button {
 	@Override
 	public void onPrePOST(String data, OgemaHttpRequest req) {
 		int prevstate = getState(req);
-		int newState = prevstate+1;
+		int newState = getNextState(prevstate, req);
 		if(newState >= optionColors.size())
 			newState = 0;
 		removeStyle(optionColors.get(prevstate), req);
