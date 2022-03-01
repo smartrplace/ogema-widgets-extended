@@ -18,6 +18,7 @@ import de.iwes.widgets.html.form.button.ButtonData;
  */
 public abstract class IntegerMultiButton extends Button {
 	protected final List<WidgetStyle<Button>> optionColors;
+	public boolean isPolling = false;
 	
 	protected abstract String getText(int state, OgemaHttpRequest req);
 	protected abstract int getState(OgemaHttpRequest req);
@@ -55,13 +56,14 @@ public abstract class IntegerMultiButton extends Button {
 			throw new IllegalStateException("State out of bounds:"+state+", optionColors size:"+optionColors.size());
 		String text = getText(state, req);
 		setText(text, req);
-		addStyle(optionColors.get(state), req);
-		/*for(int idx=0; idx<optionColors.size(); idx++) {
+		if(!isPolling)
+			addStyle(optionColors.get(state), req);
+		else for(int idx=0; idx<optionColors.size(); idx++) {
 			if(idx == state)
 				addStyle(optionColors.get(idx), req);
 			else
 				removeStyle(optionColors.get(idx), req);
-		}*/
+		}
 	}
 	
 	@Override
