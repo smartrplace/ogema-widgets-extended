@@ -62,6 +62,7 @@
         <dependency>
             <groupId>org.ogema.core</groupId>
             <artifactId>models</artifactId>
+            <version>2.2.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.ogema.tools</groupId>
@@ -70,6 +71,7 @@
         <dependency>
             <groupId>org.ogema.widgets</groupId>
             <artifactId>ogema-js-bundle</artifactId>
+            <version>2.2.2-SNAPSHOT</version>
         </dependency>
         <dependency>
             <groupId>org.ogema.widgets</groupId>
