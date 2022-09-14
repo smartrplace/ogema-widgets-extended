@@ -196,6 +196,10 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 	@Override
 	public <M extends T, N extends M> D saveResult(M result, Class<N> typeToUse, int status, String baseFileName,
 			boolean overwriteIfExisting, String providerId) {
+		if(baseFileName.contains("/") || baseFileName.contains("\\")) {
+			baseFileName.replace("/", "_");
+			baseFileName.replace("\\", "_");
+		}
 		String destPath = getJSONFilePath(getFilePath(null, status, null), baseFileName, overwriteIfExisting);
 		System.out.println("Saving result to "+destPath);
 		MultiEvaluationUtils.exportToJSONFile(destPath, result);
