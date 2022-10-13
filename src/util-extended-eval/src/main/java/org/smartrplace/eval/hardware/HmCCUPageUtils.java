@@ -59,7 +59,8 @@ public class HmCCUPageUtils {
 					if(t != null) {
 						long remaining = t.getNextRunTime()-t.getExecutionTime();
 						return "on ("+StringFormatHelper.getFormattedValue(remaining)+")";
-					} return "on !NO TIMER!";
+					}
+					return "on !NO TIMER!";
 				case 4:
 					return "No TechIn Control";
 				default:
