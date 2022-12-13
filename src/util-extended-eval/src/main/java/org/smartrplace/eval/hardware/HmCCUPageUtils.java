@@ -7,6 +7,7 @@ import org.ogema.core.application.ApplicationManager;
 import org.ogema.core.application.Timer;
 import org.ogema.core.application.TimerListener;
 import org.ogema.core.model.Resource;
+import org.ogema.core.model.simple.StringResource;
 import org.ogema.devicefinder.util.DeviceTableRaw;
 import org.ogema.drivers.homematic.xmlrpc.hl.types.HmInterfaceInfo;
 import org.ogema.drivers.homematic.xmlrpc.hl.types.HmLogicInterface;
@@ -121,5 +122,21 @@ public class HmCCUPageUtils {
 		});
 		timers.put(device.getLocation(), t);
 		return t;
+	}
+	
+	public static void addClientUrl(HmInterfaceInfo device, ObjectResourceGUIHelper<InstallAppDevice, InstallAppDevice> vh, String id, Row row) {
+		StringResource clientUrlRes = device.getSubResource("clientUrl", StringResource.class);
+		if(clientUrlRes.exists()) {
+			String fullVal = clientUrlRes.getValue();
+			String showVal;
+			if(fullVal.startsWith("http://"))
+				showVal = fullVal.substring("http://".length());
+			else
+				showVal = fullVal;
+			if(showVal.endsWith(":2001")||showVal.endsWith(":2010"))
+				showVal = showVal.substring(0,  showVal.length()-5);
+			vh.stringLabel("clientUrl", id, showVal, row);
+		}
+		
 	}
 }
