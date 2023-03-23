@@ -39,109 +39,118 @@ import org.ogema.util.resourcebackup.ResourceImportExportManager;
 import de.iwes.timeseries.eval.api.extended.util.MultiEvaluationUtils;
 
 public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData> implements JsonOGEMAFileManagement<T, D> {
+
 	public static final int MAX_RESULT_WITH_SAME_BASE_NAME = 99;
 
 	protected abstract Class<D> getDescriptorType();
-	
+
 	protected D getNewDescriptor(String name) {
-		return (D) currentWorkspace.fileData().addDecorator(name, getDescriptorType());		
+		return (D) currentWorkspace.fileData().addDecorator(name, getDescriptorType());
 	}
-	
+
 	final protected Map<String, Class<? extends T>> knownClasses = new HashMap<>();
 	final JsonOGEMAFileManagementData appData;
 	final ApplicationManager appMan;
-	
+
 	protected JsonOGEMAWorkspaceData currentWorkspace;
-	
+
 	public JsonOGEMAFileManagementImpl(JsonOGEMAFileManagementData appData, ApplicationManager appMan) {
 		this.appData = appData;
 		this.appMan = appMan;
 		init();
 	}
+
 	public JsonOGEMAFileManagementImpl(JsonOGEMAFileManagementData appData, String basePath, ApplicationManager appMan) {
 		this.appData = appData;
 		this.appMan = appMan;
 		initAppData(basePath);
 	}
-	
+
 	public JsonOGEMAFileManagementImpl(Resource parent, String managementName, String basePath, ApplicationManager appMan) {
 		this.appData = parent.addDecorator(managementName, JsonOGEMAFileManagementData.class);
 		this.appMan = appMan;
 		initAppData(basePath);
 	}
+
 	private void initAppData(String basePath) {
 		//appData.basePath().<StringResource>create().setValue(basePath);
 		appData.workspaceData().create();
 		//usually we create default workspace here and activate everything afterwards
 		init();
-		appData.activate(true);		
+		appData.activate(true);
 	}
-	
+
 	private void init() {
 		currentWorkspace = appData.lastWorkspaceUsed();
-		if(!currentWorkspace.isActive()) {
+		if (!currentWorkspace.isActive()) {
 			currentWorkspace = getWorkspaceData(DEFAULT_WORKSPACE_NAME);
-			if(currentWorkspace == null) {
+			if (currentWorkspace == null) {
 				//create default
 				setWorkspace(DEFAULT_WORKSPACE_NAME);
 			}
 		}
-		
+
 	}
-	
+
 	@Override
 	public void registerClass(Class<? extends T> resultStructure) {
 		knownClasses.put(resultStructure.getName(), resultStructure);
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	@Override
 	public D getFileInfo(String fileNameWithPath) {
-		for(JsonOGEMAFileData fd: currentWorkspace.fileData().getAllElements()) {
-			if(getFilePathInCurrentWorkspace(fd).equals(fileNameWithPath)) return (D)fd;
+		for (JsonOGEMAFileData fd : currentWorkspace.fileData().getAllElements()) {
+			if (getFilePathInCurrentWorkspace(fd).equals(fileNameWithPath)) {
+				return (D) fd;
+			}
 		}
 		return null;
 	}
-	
+
 	public int getStatus(String fileNameWithPath) {
 		String[] els = fileNameWithPath.split("/");
-		String[] els2 = els[els.length-1].split("\\\\");
-		if(els2.length == 1 && els.length == 1) throw new IllegalArgumentException("fileName contains no status element:"+fileNameWithPath); 
+		String[] els2 = els[els.length - 1].split("\\\\");
+		if (els2.length == 1 && els.length == 1) {
+			throw new IllegalArgumentException("fileName contains no status element:" + fileNameWithPath);
+		}
 		String statusString;
-		if(els2.length == 1) {
-			els2 = els[els.length-2].split("\\\\");
-			statusString = els2[els2.length-1];
-		} else statusString = els2[els2.length-2];
-		switch(statusString) {
-		case TEMPORARY_FOLDER_NAME:
-			return 1;
-		case EXPERIMENTAL_FOLDER_NAME:
-			return 10;
-		case MAJOR_FOLDER_NAME:
-			return 100;
-		default:
-			throw new IllegalArgumentException("fileName contains no status element:"+fileNameWithPath+" statusString:"+statusString);	
+		if (els2.length == 1) {
+			els2 = els[els.length - 2].split("\\\\");
+			statusString = els2[els2.length - 1];
+		} else {
+			statusString = els2[els2.length - 2];
+		}
+		switch (statusString) {
+			case TEMPORARY_FOLDER_NAME:
+				return 1;
+			case EXPERIMENTAL_FOLDER_NAME:
+				return 10;
+			case MAJOR_FOLDER_NAME:
+				return 100;
+			default:
+				throw new IllegalArgumentException("fileName contains no status element:" + fileNameWithPath + " statusString:" + statusString);
 		}
 	}
-	
+
 	public String getPathInWorkspace(String fileNameWithPath) {
 		String[] els = fileNameWithPath.split("/");
-		String[] els2 = els[els.length-1].split("\\\\");
-		return els2[els2.length-1];
+		String[] els2 = els[els.length - 1].split("\\\\");
+		return els2[els2.length - 1];
 	}
 
 	@Override
 	public D createFileInfo(String fileNameWithPath, Class<? extends T> resultStructure,
 			String providerId) {
 		D result = getFileInfo(fileNameWithPath);
-		if(result == null) {
+		if (result == null) {
 			int status = getStatus(fileNameWithPath);
 			String relativePath = getPathInWorkspace(fileNameWithPath);
 			registerClass((Class<? extends T>) resultStructure);
 			result = getNewDescriptor(ResourceUtils.getValidResourceName(relativePath));
 			result.status().<IntegerResource>create().setValue(status);
 			result.workSpaceRelativePath().<StringResource>create().setValue(relativePath);
-			if(providerId != null) {
+			if (providerId != null) {
 				result.evaluationProviderId().<StringResource>create().setValue(providerId);
 			}
 			result.resultClassName().<StringResource>create().setValue(resultStructure.getName());
@@ -172,7 +181,6 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		
 		throw new UnsupportedOperationException("not implemented yet!");
 	}*/
-
 	@Override
 	public <M extends T> M importFromJSON(JsonOGEMAFileData fileData) {
 		return importFromJSON(getFilePathInCurrentWorkspace(fileData), fileData.resultClassName().getValue());
@@ -184,10 +192,12 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		Class<M> resultClass = (Class<M>) knownClasses.get(resultClassName);
 		return importFromJSON(fileNameWithPath, resultClass);
 	}
+
 	@Override
 	public <M extends T> M importFromJSON(String fileNameWithPath, Class<M> resultClass) {
-		if(resultClass == null)
+		if (resultClass == null) {
 			return null;
+		}
 		M result = MultiEvaluationUtils.importFromJSON(fileNameWithPath, resultClass);
 		return result;
 	}
@@ -196,16 +206,18 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 	@Override
 	public <M extends T, N extends M> D saveResult(M result, Class<N> typeToUse, int status, String baseFileName,
 			boolean overwriteIfExisting, String providerId) {
-		if(baseFileName.contains("/") || baseFileName.contains("\\")) {
+		if (baseFileName.contains("/") || baseFileName.contains("\\")) {
 			baseFileName.replace("/", "_");
 			baseFileName.replace("\\", "_");
 		}
 		String destPath = getJSONFilePath(getFilePath(null, status, null), baseFileName, overwriteIfExisting);
-		System.out.println("Saving result to "+destPath);
 		MultiEvaluationUtils.exportToJSONFile(destPath, result);
 		Class<? extends M> type;
-		if(typeToUse != null) type = typeToUse;
-		else type = (Class<? extends M>) result.getClass();
+		if (typeToUse != null) {
+			type = typeToUse;
+		} else {
+			type = (Class<? extends M>) result.getClass();
+		}
 		D resultRes = createFileInfo(destPath, type, providerId);
 		return resultRes;
 	}
@@ -216,21 +228,22 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		//String newPath = "";
 		String jsonFileName = baseFileName;
 		Path providerPath;
-		if(jsonFileName.endsWith(".json"))
-			providerPath = Paths.get(dirPath+"/"+jsonFileName);
-		else
-			providerPath = Paths.get(dirPath+"/"+jsonFileName+"Result.json");
-		if((!Files.isRegularFile(providerPath)) || overwriteIfExisting) {
+		if (jsonFileName.endsWith(".json")) {
+			providerPath = Paths.get(dirPath + "/" + jsonFileName);
+		} else {
+			providerPath = Paths.get(dirPath + "/" + jsonFileName + "Result.json");
+		}
+		if ((!Files.isRegularFile(providerPath)) || overwriteIfExisting) {
 			//do nothing
 			//newPath = providerPath.toString();
 		} else {
-			while(Files.isRegularFile(providerPath) && (j <= MAX_RESULT_WITH_SAME_BASE_NAME)) { //(i < j) {
-				providerPath = Paths.get(j < 10?dirPath+"/"+jsonFileName+"Result_0"+j+".json":
-					dirPath+"/"+jsonFileName+"Result_"+j+".json");
-				
+			while (Files.isRegularFile(providerPath) && (j <= MAX_RESULT_WITH_SAME_BASE_NAME)) { //(i < j) {
+				providerPath = Paths.get(j < 10 ? dirPath + "/" + jsonFileName + "Result_0" + j + ".json"
+						: dirPath + "/" + jsonFileName + "Result_" + j + ".json");
+
 				//if(!Files.isRegularFile(providerPath)) {
-					//newPath = j < 10?jsonFileName+"Result_0"+j+".json":jsonFileName+"Result_"+j+".json";
-					//i++;
+				//newPath = j < 10?jsonFileName+"Result_0"+j+".json":jsonFileName+"Result_"+j+".json";
+				//i++;
 				//}
 				j++;
 				//i++;
@@ -238,11 +251,11 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		}
 		return providerPath.toString();
 	}
-	
+
 	@Override
 	public void setWorkspace(String workspace) {
 		JsonOGEMAWorkspaceData newWS = getWorkspaceData(workspace);
-		if(newWS == null) {
+		if (newWS == null) {
 			String resName = ResourceUtils.getValidResourceName(workspace);
 			newWS = appData.workspaceData().addDecorator(resName,
 					JsonOGEMAWorkspaceData.class);
@@ -250,7 +263,9 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 			//newWS.workspacePath().<StringResource>create().setValue(
 			//		Paths.get(appData.basePath().getValue(), resName).toString());
 			newWS.name().<StringResource>create().setValue(workspace);
-			if(appData.isActive()) newWS.activate(true);
+			if (appData.isActive()) {
+				newWS.activate(true);
+			}
 		}
 		currentWorkspace = newWS;
 		appData.lastWorkspaceUsed().setAsReference(newWS);
@@ -258,18 +273,20 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 
 	@Override
 	public JsonOGEMAWorkspaceData getWorkspaceData(String workspace) {
-		for(JsonOGEMAWorkspaceData ws: appData.workspaceData().getAllElements()) {
-			if(ws.name().getValue().equals(workspace)) return ws;
+		for (JsonOGEMAWorkspaceData ws : appData.workspaceData().getAllElements()) {
+			if (ws.name().getValue().equals(workspace)) {
+				return ws;
+			}
 		}
 		return null;
 	}
-	
+
 	@Override
 	public List<JsonOGEMAWorkspaceData> getWorkspaces() {
 		return appData.workspaceData().getAllElements();
 	}
 
-	/** 
+	/**
 	 * @param status see {@link JsonOGEMAFileData#status()}
 	 */
 	@Override
@@ -284,42 +301,53 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 		//if(workspace == null) wsLoc = currentWorkspace;
 		//else wsLoc = getWorkspaceData(workspace);
 		String statusName;
-		if(status == 1) statusName = TEMPORARY_FOLDER_NAME;
-		else if(status == 10) statusName = EXPERIMENTAL_FOLDER_NAME;
-		else if(status == 100) statusName = MAJOR_FOLDER_NAME;
-		else throw new IllegalStateException("Unknown status:"+status);
+		if (status == 1) {
+			statusName = TEMPORARY_FOLDER_NAME;
+		} else if (status == 10) {
+			statusName = EXPERIMENTAL_FOLDER_NAME;
+		} else if (status == 100) {
+			statusName = MAJOR_FOLDER_NAME;
+		} else {
+			throw new IllegalStateException("Unknown status:" + status);
+		}
 		//String basePath = appData.basePath().getValue();
 		//if(workSpaceRelativePath == null) return Paths.get(basePath, resName, statusName).toString();
 		//return Paths.get(appData.basePath().getValue(), resName, statusName, workSpaceRelativePath).toString();
 		///JsonOGEMAWorkspaceData ws = wsLoc.getLocationResource();
 		//String wsPath = ws.workspacePath().getValue(); //currentWorkspace.workspacePath().getValue();
-		String resName = workspace!=null?ResourceUtils.getValidResourceName(workspace):currentWorkspace.getName();
+		String resName = workspace != null ? ResourceUtils.getValidResourceName(workspace) : currentWorkspace.getName();
 		String wsPath = Paths.get(EvalResultManagementStd.FILE_PATH, resName).toString();
-		if(workSpaceRelativePath == null) return Paths.get(wsPath, statusName).toString();
+		if (workSpaceRelativePath == null) {
+			return Paths.get(wsPath, statusName).toString();
+		}
 		return Paths.get(wsPath, statusName, workSpaceRelativePath).toString();
 	}
-	
+
 	@Override
 	public String getFilePathInCurrentWorkspace(JsonOGEMAFileData fileData) {
 		return getFilePath(null, fileData.status().getValue(), fileData.workSpaceRelativePath().getValue());
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public <M extends T> List<D> getDataOfType(Class<M> type) {
 		List<D> result = new ArrayList<>();
-		for(JsonOGEMAFileData fd: currentWorkspace.fileData().getAllElements()) {
-			if(fd.resultClassName().getValue().equals(type.getName())) result.add((D) fd);
+		for (JsonOGEMAFileData fd : currentWorkspace.fileData().getAllElements()) {
+			if (fd.resultClassName().getValue().equals(type.getName())) {
+				result.add((D) fd);
+			}
 		}
-		return result ;
+		return result;
 	}
-	
+
 	@SuppressWarnings("unchecked")
 	public List<D> getDataOfProvider(String providerId) {
 		List<D> result = new ArrayList<>();
-		for(JsonOGEMAFileData fd: currentWorkspace.fileData().getAllElements()) {
-			if(fd.evaluationProviderId().getValue().equals(providerId)) result.add((D) fd);
+		for (JsonOGEMAFileData fd : currentWorkspace.fileData().getAllElements()) {
+			if (fd.evaluationProviderId().getValue().equals(providerId)) {
+				result.add((D) fd);
+			}
 		}
-		return result ;
+		return result;
 	}
 
 	@Override
@@ -327,26 +355,31 @@ public abstract class JsonOGEMAFileManagementImpl<T, D extends JsonOGEMAFileData
 			boolean exportAsXML) {
 		throw new UnsupportedOperationException("not implemented yet!");
 	}
-	
+
 	@Override
 	public boolean exportFileData(JsonOGEMAFileData descriptor, String destinationFilePath,
 			boolean exportAsXML) {
-		if(descriptor == null) {
+		if (descriptor == null) {
 			boolean success = true;
-			for(JsonOGEMAFileData desc: currentWorkspace.fileData().getAllElements()) {
-				if(!exportFileDataInternal(desc, destinationFilePath, exportAsXML))
+			for (JsonOGEMAFileData desc : currentWorkspace.fileData().getAllElements()) {
+				if (!exportFileDataInternal(desc, destinationFilePath, exportAsXML)) {
 					success = false;
+				}
 			}
 			return success;
-		} else return exportFileDataInternal(descriptor, destinationFilePath, exportAsXML);
+		} else {
+			return exportFileDataInternal(descriptor, destinationFilePath, exportAsXML);
+		}
 	}
-	
-	/** Requires descriptor to be set*/
+
+	/**
+	 * Requires descriptor to be set
+	 */
 	private boolean exportFileDataInternal(JsonOGEMAFileData descriptor, String destinationFilePath,
 			boolean exportAsXML) {
-		if(destinationFilePath == null) {
+		if (destinationFilePath == null) {
 			String s = getFilePath(null, descriptor.status().getValue(),
-				descriptor.workSpaceRelativePath().getValue());
+					descriptor.workSpaceRelativePath().getValue());
 			destinationFilePath = FilenameUtils.getFullPath(s);
 		}
 		String fileName = FilenameUtils.getBaseName(descriptor.workSpaceRelativePath().getValue());
