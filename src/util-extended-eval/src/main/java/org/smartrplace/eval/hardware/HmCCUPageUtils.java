@@ -124,7 +124,7 @@ public class HmCCUPageUtils {
 		return t;
 	}
 	
-	public static void addClientUrl(HmInterfaceInfo device, ObjectResourceGUIHelper<InstallAppDevice, InstallAppDevice> vh, String id, Row row) {
+	public static String addClientUrl(HmInterfaceInfo device, ObjectResourceGUIHelper<InstallAppDevice, InstallAppDevice> vh, String id, Row row) {
 		StringResource clientUrlRes = device.getSubResource("clientUrl", StringResource.class);
 		if(clientUrlRes.exists()) {
 			String fullVal = clientUrlRes.getValue();
@@ -136,7 +136,8 @@ public class HmCCUPageUtils {
 			if(showVal.endsWith(":2001")||showVal.endsWith(":2010"))
 				showVal = showVal.substring(0,  showVal.length()-5);
 			vh.stringLabel("clientUrl", id, showVal, row);
+			return showVal;
 		}
-		
+		return null;
 	}
 }
