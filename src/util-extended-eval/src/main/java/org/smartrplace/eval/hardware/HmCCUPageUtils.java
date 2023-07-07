@@ -71,13 +71,14 @@ public class HmCCUPageUtils {
 			
 			@Override
 			protected int getState(OgemaHttpRequest req) {
-				Resource logicIfRaw = device.getLocationResource().getParent();
+				return getTeachInState(device);
+				/*Resource logicIfRaw = device.getLocationResource().getParent();
 				if(logicIfRaw == null || (!(logicIfRaw instanceof HmLogicInterface)))
 					return 4;
 				HmLogicInterface logicIf = (HmLogicInterface) logicIfRaw;
 				boolean isDone = logicIf.installationMode().stateFeedback().getValue() == logicIf.installationMode().stateControl().getValue();
 				int state = (logicIf.installationMode().stateControl().getValue()?2:0)+(isDone?1:0);
-				return state;
+				return state;*/
 			}
 			
 			@Override
@@ -95,6 +96,17 @@ public class HmCCUPageUtils {
 		row.addCell("TeachIn", teachInMode);
 		return teachInMode;
 	}
+	
+	public static int getTeachInState(HmInterfaceInfo device) {
+		Resource logicIfRaw = device.getLocationResource().getParent();
+		if(logicIfRaw == null || (!(logicIfRaw instanceof HmLogicInterface)))
+			return 4;
+		HmLogicInterface logicIf = (HmLogicInterface) logicIfRaw;
+		boolean isDone = logicIf.installationMode().stateFeedback().getValue() == logicIf.installationMode().stateControl().getValue();
+		int state = (logicIf.installationMode().stateControl().getValue()?2:0)+(isDone?1:0);
+		return state;
+	}
+
 	
 	public static float getEffectiveMinutesCCUTeachIn(HardwareInstallConfig hwConfig) {
 		if(hwConfig.techInModeDuration().exists())
