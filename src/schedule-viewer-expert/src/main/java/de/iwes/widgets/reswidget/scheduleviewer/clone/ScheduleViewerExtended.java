@@ -744,45 +744,14 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 		plot.setInterval(startTime, endTime, req);*/
 		GetPlotDataResult plotData = getSchedulesToPlot(showCheckboxes, req);
 		plot.setInterval(plotData.startTime, plotData.endTime, req);
+		
+		ScheduleManipulator.lastPlotStart = plotData.startTime;
+		ScheduleManipulator.lastPlotEnd = plotData.endTime;
+		
 		Map<String, SchedulePresentationData> schedules = new LinkedHashMap<String, SchedulePresentationData>();
 		for(DefaultSchedulePresentationData schedData: plotData.schedData) {
 			schedules.put(schedData.label, schedData);			
 		}
-		/*for (ReadOnlyTimeSeries sched : selectedSchedules) {
-			if (!showEmpty && sched.isEmpty(startTime, endTime))
-				continue;
-			Resource parent = null;
-			Class<?> type = null;
-			List<Collection<TimeSeriesFilter>> programs = ScheduleSelector.parseFilters(configuration(req).programs);// sessionconfig.programsPreselected();
-			List<Collection<TimeSeriesFilterExtended>> filterCollection = ScheduleViewerUtil.getInstance()
-					.parse(programs, am.getResourceAccess());
-			List<TimeSeriesFilterExtended> filters = new ArrayList<>();
-			for(Collection<TimeSeriesFilterExtended> item : filterCollection) {
-				filters.addAll(item);
-			}	
-			for(TimeSeriesFilterExtended filter : filters) {
-				if(filter.accept(sched)) {
-					type = filter.type(sched);
-				}
-			}
-			if(type == null) {
-				if (sched instanceof SchedulePresentationData) {
-					type = ((SchedulePresentationData) sched).getScheduleType();
-				} else if (sched instanceof Schedule) {
-					parent = ((Schedule) sched).getParent();
-				} else if (sched instanceof RecordedData) {
-					String path = ((RecordedData) sched).getPath();
-					parent = am.getResourceAccess().getResource(path);
-				} //else
-				//	continue;
-			}
-			if ((type == null) && (parent != null)) {
-				if ((parent instanceof SingleValueResource) && (!(parent instanceof StringResource)))
-					type = parent.getResourceType();
-			}
-			String label = getLabelForPlot(req, sched);
-			schedules.put(label, new DefaultSchedulePresentationData(sched, type, label));
-		}*/
 		ScheduleData<?> data = plot.getScheduleData(req);
 		data.setSchedules(schedules);
 	}

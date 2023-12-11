@@ -460,7 +460,7 @@ public class OfflineEvaluationControl {
 				}
 				
 				@Override
-				public List<TimeSeriesData> getData(OgemaHttpRequest req) {
+				public List<TimeSeriesData> getData(long start, long end, OgemaHttpRequest req) {
 					final GaRoSingleEvalProvider eval = selectProvider.getSelectedItem(req);
 					final List<String> gwIDs = (List<String>) gateWaySelection.multiSelect.getSelectedLabels(req);
 					
@@ -1004,7 +1004,7 @@ public class OfflineEvaluationControl {
 	}
 	
 	public static interface ScheduleViewerOpenButtonDataProvider {
-		List<TimeSeriesData> getData(OgemaHttpRequest req);
+		List<TimeSeriesData> getData(long start, long end, OgemaHttpRequest req);
 		IntervalConfiguration getITVConfiguration(String config, ApplicationManager appMan);
 		default TimeSeriesNameProvider nameProvider() {
 			return new TimeSeriesNameProvider() {};
@@ -1037,8 +1037,8 @@ public class OfflineEvaluationControl {
 			}
 
 			@Override
-			protected List<TimeSeriesData> getTimeseries(OgemaHttpRequest req) {
-				return provider.getData(req);
+			protected List<TimeSeriesData> getTimeseries(long start, long end, OgemaHttpRequest req) {
+				return provider.getData(start, end, req);
 			}
 
 			@Override
