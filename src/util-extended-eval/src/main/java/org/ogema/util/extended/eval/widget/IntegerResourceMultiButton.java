@@ -40,9 +40,9 @@ public abstract class IntegerResourceMultiButton extends IntegerMultiButton {
 		this.res = res;
 	}
 
-	public IntegerResourceMultiButton(OgemaWidget parent, String id, OgemaHttpRequest req,
+	public IntegerResourceMultiButton(OgemaWidget parent, String id, boolean isPolling, OgemaHttpRequest req,
 			IntegerResource res, WidgetStyle<Button>[] optionColors) {
-		super(parent, id, req, optionColors);
+		super(parent, id, isPolling, req, optionColors);
 		this.res = res;
 	}
 }

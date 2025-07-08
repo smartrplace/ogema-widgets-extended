@@ -27,9 +27,11 @@ public abstract class IntegerMultiButton extends Button {
 		return prevstate+1;
 	}
 	
-	public IntegerMultiButton(OgemaWidget parent, String id, OgemaHttpRequest req, WidgetStyle<Button>[] optionColors) {
+	public IntegerMultiButton(OgemaWidget parent, String id, boolean isPolling,
+			OgemaHttpRequest req, WidgetStyle<Button>[] optionColors) {
 		super(parent, id, req);
 		this.optionColors = Arrays.asList(optionColors);
+		this.isPolling = isPolling;
 		triggerOnPOST(this);
 	}
 	

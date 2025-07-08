@@ -31,7 +31,7 @@ public class HmCCUPageUtils {
 			Row row,
 			ApplicationManager appMan, HardwareInstallConfig hwConfig) {
 		@SuppressWarnings({ "unchecked", "serial" })
-		IntegerMultiButton teachInMode = new IntegerMultiButton(vh.getParent(), "techInMode"+id, req,
+		IntegerMultiButton teachInMode = new IntegerMultiButton(vh.getParent(), "techInMode"+id, true, req,
 				new WidgetStyle[] {ButtonData.BOOTSTRAP_ORANGE, ButtonData.BOOTSTRAP_GREEN, ButtonData.BOOTSTRAP_ORANGE, ButtonData.BOOTSTRAP_RED,
 						ButtonData.BOOTSTRAP_LIGHTGREY}) {
 			@Override
