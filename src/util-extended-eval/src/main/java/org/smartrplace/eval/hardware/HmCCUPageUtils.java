@@ -15,11 +15,13 @@ import org.ogema.timeseries.eval.simple.api.TimeProcUtil;
 import org.ogema.util.extended.eval.widget.IntegerMultiButton;
 import org.smartrplace.apps.hw.install.config.HardwareInstallConfig;
 import org.smartrplace.apps.hw.install.config.InstallAppDevice;
+import org.smartrplace.tissue.util.resource.GatewaySyncUtil;
 import org.smartrplace.util.directobjectgui.ObjectResourceGUIHelper;
 
 import de.iwes.util.format.StringFormatHelper;
 import de.iwes.widgets.api.widgets.WidgetStyle;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
+import de.iwes.widgets.html.alert.Alert;
 import de.iwes.widgets.html.complextable.RowTemplate.Row;
 import de.iwes.widgets.html.form.button.ButtonData;
 
@@ -29,7 +31,8 @@ public class HmCCUPageUtils {
 	public static IntegerMultiButton addTechInModeButton(InstallAppDevice object, HmInterfaceInfo device,
 			ObjectResourceGUIHelper<InstallAppDevice, InstallAppDevice> vh, String id, OgemaHttpRequest req,
 			Row row,
-			ApplicationManager appMan, HardwareInstallConfig hwConfig) {
+			ApplicationManager appMan, HardwareInstallConfig hwConfig,
+			Alert alert) {
 		@SuppressWarnings({ "unchecked", "serial" })
 		IntegerMultiButton teachInMode = new IntegerMultiButton(vh.getParent(), "techInMode"+id, true, req,
 				new WidgetStyle[] {ButtonData.BOOTSTRAP_ORANGE, ButtonData.BOOTSTRAP_GREEN, ButtonData.BOOTSTRAP_ORANGE, ButtonData.BOOTSTRAP_RED,
@@ -44,6 +47,12 @@ public class HmCCUPageUtils {
 					createTimer(device, (HmLogicInterface) logicIfRaw, appMan, hwConfig);
 				}
 				((HmLogicInterface) logicIfRaw).installationMode().stateControl().setValue(stateControl);
+				
+				String remoteGatewayOfCcu = GatewaySyncUtil.getGatewayBaseIdIfRemoteDevice(device.getLocationResource());
+				if(remoteGatewayOfCcu != null) {
+					alert.showAlert("MQTT-Replicator nach dem Anlernen neu starten, um Geräte sichtbar zu machen!", false,
+							2*TimeProcUtil.MINUTE_MILLIS, req);
+				}
 			}
 			
 			@Override
@@ -93,6 +102,8 @@ public class HmCCUPageUtils {
 		teachInMode.isPolling = true;
 		teachInMode.registerDependentWidget(teachInMode);
 		teachInMode.setPollingInterval(DeviceTableRaw.DEFAULT_POLL_RATE, req);
+		if(alert != null)
+			teachInMode.registerDependentWidget(alert);
 		row.addCell("TeachIn", teachInMode);
 		return teachInMode;
 	}
