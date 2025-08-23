@@ -58,6 +58,7 @@ public class HmCCUPageUtils {
 			@Override
 			protected String getText(int state, OgemaHttpRequest req) {
 				String minutes;
+				String remoteGatewayOfCcu = GatewaySyncUtil.getGatewayBaseIdIfRemoteDevice(device.getLocationResource());
 				if(hwConfig.techInModeDuration().exists())
 					minutes = String.format("%.1f", hwConfig.techInModeDuration().getValue());
 				else
@@ -68,12 +69,16 @@ public class HmCCUPageUtils {
 					Timer t = timers.get(device.getLocation());
 					if(t != null) {
 						long remaining = t.getNextRunTime()-t.getExecutionTime();
+						if(remoteGatewayOfCcu != null)
+							return "!!MQTT-Repl on ("+StringFormatHelper.getFormattedValue(remaining)+")";
 						return "on ("+StringFormatHelper.getFormattedValue(remaining)+")";
 					}
 					return "on !NO TIMER!";
 				case 4:
 					return "No TechIn Control";
 				default:
+					if(remoteGatewayOfCcu != null)
+						return "!!MQTT-Repl off ("+minutes+")";
 					return "off ("+minutes+")";
 				}
 			}
