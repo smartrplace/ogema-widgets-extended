@@ -653,7 +653,7 @@ public class ScheduleViewerExtended extends PageSnippet implements ScheduleViewe
 				}
 			}
 		};
-		lineTypeSelector.selectDefaultItem(PlotType.LINE);
+		lineTypeSelector.selectDefaultItem(Boolean.getBoolean("org.smartrplace.eval.impl.timeseries.enable")?PlotType.LINE_WITH_POINTS:PlotType.LINE);
 	}
 	
 	/**

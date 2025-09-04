@@ -24,9 +24,12 @@ import org.ogema.humread.valueconversion.HumanReadableValueConverter;
 import org.ogema.humread.valueconversion.HumanReadableValueConverter.LinearTransformation;
 import org.smartrplace.util.format.WidgetHelper;
 
+import com.fasterxml.jackson.databind.ser.std.StdKeySerializers.Dynamic;
+
 import de.iwes.widgets.api.widgets.OgemaWidget;
 import de.iwes.widgets.api.widgets.sessionmanagement.OgemaHttpRequest;
 import de.iwes.widgets.html.alert.Alert;
+import de.iwes.widgets.html.complextable.DynamicTable;
 import de.iwes.widgets.html.complextable.RowTemplate;
 import de.iwes.widgets.html.form.label.Label;
 
@@ -59,7 +62,12 @@ public class MinMaxTableRowTemplate extends RowTemplate<DefaultSchedulePresentat
 		Row row = new Row();
 		final String lineId = getLineId(object);
 		
-		final Label nameLabel = new Label(parent, lineId+ "_commentLabel", object.data.getLabel(null),req);
+		String text = object.data.getLabel(null);
+		if(Boolean.getBoolean("org.smartrplace.eval.impl.timeseries.enable") && !DynamicTable.rowNumInTableDone) {
+			DynamicTable.rowNumInTableDone = true;
+			text += " (1/"+DynamicTable.plotRowNums+")";
+		}
+		final Label nameLabel = new Label(parent, lineId+ "_commentLabel", text,req);
 		row.addCell("Timeseries",nameLabel);
 		
 		LinearTransformation trans = HumanReadableValueConverter.getTransformationIfNonTrivial(object.data);
