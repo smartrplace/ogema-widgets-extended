@@ -189,7 +189,7 @@ public class HmCCUPageUtils {
 	public static void setTeachInStateCheckOthers(int state, HmInterfaceInfo device,
 			HardwareInstallConfig hwConfig, ApplicationManager appMan, DatapointService dpService) {
 		int curState = getTeachInStateCheckOthers(device, dpService);
-		if(curState == -1 && state != 3)
+		if(curState == -1 && state < 5)
 			return;
 		if(curState == -1) {
 			Collection<InstallAppDevice> allCCU = dpService.managedDeviceResoures("org.smartrplace.app.drivermonservice.devicehandler.HomematicCCUHandler", false);
@@ -201,7 +201,7 @@ public class HmCCUPageUtils {
 					setTeachInState(0, (HmInterfaceInfo) other.device(), hwConfig, appMan);
 			}
 		}
-		setTeachInState(curState, device, hwConfig, appMan);
+		setTeachInState(state>=3?3:1, device, hwConfig, appMan);
 	}			
 			
 	public static float getEffectiveMinutesCCUTeachIn(HardwareInstallConfig hwConfig) {
