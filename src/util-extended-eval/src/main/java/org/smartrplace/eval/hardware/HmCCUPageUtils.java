@@ -146,6 +146,34 @@ public class HmCCUPageUtils {
 		return baseResult;
 	}
 	
+	/** Get state according to API definition, especially remaining negative minutes of teach-in state if active 
+	 * and shifting states 0,1,2 to define blocking state 0*/
+	public static int getTeachInStateCheckOthersIncludingMinutes(HmInterfaceInfo device, DatapointService dpService) {
+		int baseResult = getTeachInState(device);
+		if(baseResult > 1) {
+			if(baseResult == 2)
+				return 3;
+			if(baseResult == 3) {
+				Timer t = timers.get(device.getLocation());
+				if(t != null) {
+					long remaining = t.getNextRunTime()-t.getExecutionTime();
+					return (int) -((remaining/TimeProcUtil.MINUTE_MILLIS));
+				}
+				return -1;
+			}
+			return 4;
+		}
+		Collection<InstallAppDevice> allCCU = dpService.managedDeviceResoures("org.smartrplace.app.drivermonservice.devicehandler.HomematicCCUHandler", false);
+		for(InstallAppDevice ccu: allCCU) {
+			if(!(ccu.device() instanceof HmInterfaceInfo))
+				continue;
+			int otherState = getTeachInState((HmInterfaceInfo) ccu.device());
+			if((otherState != 1) && (otherState != 4))
+				return 0;
+		}
+		return baseResult+1;
+	}
+	
 	public static void setTeachInState(int state, HmInterfaceInfo device,
 			HardwareInstallConfig hwConfig, ApplicationManager appMan) {
 		boolean stateControl = (state==2)||(state==3);
