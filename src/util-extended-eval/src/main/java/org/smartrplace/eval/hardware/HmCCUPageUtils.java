@@ -1,5 +1,6 @@
 package org.smartrplace.eval.hardware;
 
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.Map;
 
@@ -8,6 +9,7 @@ import org.ogema.core.application.Timer;
 import org.ogema.core.application.TimerListener;
 import org.ogema.core.model.Resource;
 import org.ogema.core.model.simple.StringResource;
+import org.ogema.devicefinder.api.DatapointService;
 import org.ogema.devicefinder.util.DeviceTableRaw;
 import org.ogema.drivers.homematic.xmlrpc.hl.types.HmInterfaceInfo;
 import org.ogema.drivers.homematic.xmlrpc.hl.types.HmLogicInterface;
@@ -39,14 +41,15 @@ public class HmCCUPageUtils {
 						ButtonData.BOOTSTRAP_LIGHTGREY}) {
 			@Override
 			protected void setState(int state, OgemaHttpRequest req) {
-				boolean stateControl = (state==2)||(state==3);
+				setTeachInState(state, device, hwConfig, appMan);
+				/*boolean stateControl = (state==2)||(state==3);
 				Resource logicIfRaw = device.getLocationResource().getParent();
 				if(logicIfRaw == null || (!(logicIfRaw instanceof HmLogicInterface)))
 					return;
 				if(stateControl) {
 					createTimer(device, (HmLogicInterface) logicIfRaw, appMan, hwConfig);
 				}
-				((HmLogicInterface) logicIfRaw).installationMode().stateControl().setValue(stateControl);
+				((HmLogicInterface) logicIfRaw).installationMode().stateControl().setValue(stateControl);*/
 				
 				String remoteGatewayOfCcu = GatewaySyncUtil.getGatewayBaseIdIfRemoteDevice(device.getLocationResource());
 				if(remoteGatewayOfCcu != null) {
@@ -113,6 +116,11 @@ public class HmCCUPageUtils {
 		return teachInMode;
 	}
 	
+	/** Get CCU teach-in state
+	 * @param device
+	 * @return 0=waiting for teach-in off confirmation, 1: off confirmed, 2: waiting for teach-in on confirmation,
+	 *	 3: on confirmed, 4: no-teach-in (e.g. CCU set inactive)
+	 */
 	public static int getTeachInState(HmInterfaceInfo device) {
 		Resource logicIfRaw = device.getLocationResource().getParent();
 		if(logicIfRaw == null || (!(logicIfRaw instanceof HmLogicInterface)))
@@ -123,6 +131,32 @@ public class HmCCUPageUtils {
 		return state;
 	}
 
+	public static int getTeachInStateCheckOthers(HmInterfaceInfo device, DatapointService dpService) {
+		int baseResult = getTeachInState(device);
+		if(baseResult > 1)
+			return baseResult;
+		Collection<InstallAppDevice> allCCU = dpService.managedDeviceResoures("org.smartrplace.app.drivermonservice.devicehandler.HomematicCCUHandler", false);
+		for(InstallAppDevice ccu: allCCU) {
+			if(!(ccu.device() instanceof HmInterfaceInfo))
+				continue;
+			int otherState = getTeachInState((HmInterfaceInfo) ccu.device());
+			if((otherState != 1) && (otherState != 4))
+				return -1;
+		}
+		return baseResult;
+	}
+	
+	public static void setTeachInState(int state, HmInterfaceInfo device,
+			HardwareInstallConfig hwConfig, ApplicationManager appMan) {
+		boolean stateControl = (state==2)||(state==3);
+		Resource logicIfRaw = device.getLocationResource().getParent();
+		if(logicIfRaw == null || (!(logicIfRaw instanceof HmLogicInterface)))
+			return;
+		if(stateControl) {
+			createTimer(device, (HmLogicInterface) logicIfRaw, appMan, hwConfig);
+		}
+		((HmLogicInterface) logicIfRaw).installationMode().stateControl().setValue(stateControl);		
+	}
 	
 	public static float getEffectiveMinutesCCUTeachIn(HardwareInstallConfig hwConfig) {
 		if(hwConfig.techInModeDuration().exists())
